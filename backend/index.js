@@ -1,10 +1,18 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import "dotenv/config";
+import dotenv from "dotenv";
 import { connectDB } from "./config/connectDB.js";
+import setupCloudinary from "./src/utils/cloudinary.js";
+
+dotenv.config({
+  path: "./.env",
+});
 
 const app = express();
+
+connectDB();
+setupCloudinary();
 
 const PORT = process.env.PORT || 5000;
 
@@ -17,8 +25,6 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-
-connectDB();
 
 // routes
 app.get("/", (req, res) => {
