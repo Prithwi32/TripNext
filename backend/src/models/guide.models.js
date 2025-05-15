@@ -2,12 +2,12 @@ import mongoose, { Schema } from "mongoose";
 
 const guideSchema = new Schema(
   {
-    userName: {
+    guideName: {
       type: String,
       required: true,
       trim: true,
     },
-    userEmail: {
+    guideEmail: {
       type: String,
       required: true,
       unique: true,
@@ -18,7 +18,11 @@ const guideSchema = new Schema(
       type: String,
       required: true,
     },
-    location: {
+    refreshToken: {
+      type: String,
+      default: "",
+    },
+    phoneNumber: {
       type: String,
       required: true,
       trim: true,
@@ -27,14 +31,10 @@ const guideSchema = new Schema(
       type: String,
       default: "",
     },
-    previousTrips: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Trip",
-      },
-    ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 export const Guide = mongoose.model("Guide", guideSchema);
