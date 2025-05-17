@@ -2,12 +2,15 @@ import mongoose, { Schema } from "mongoose";
 
 const packageSchema = new Schema(
   {
-    location: {
-      type: String,
+    locations: {
+      type: [String],
       required: true,
-      trim: true,
+      validate: {
+        validator: (arr) => Array.isArray(arr) && arr.length > 0,
+        message: "At least one location is required.",
+      },
     },
-    locationDescription: {
+    packageDescription: {
       type: String,
       default: "",
     },

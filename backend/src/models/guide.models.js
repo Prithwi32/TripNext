@@ -22,10 +22,16 @@ const guideSchema = new Schema(
       type: String,
       default: "",
     },
-    phoneNumber: {
+    contactNumber: {
       type: String,
       required: true,
       trim: true,
+      validate: {
+        validator: function (value) {
+          return /^\+?[0-9]{10,15}$/.test(value);
+        },
+        message: (props) => `${props.value} is not a valid contact number!`,
+      },
     },
     description: {
       type: String,

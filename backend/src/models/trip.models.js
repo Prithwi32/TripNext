@@ -29,7 +29,7 @@ const tripSchema = new Schema(
         validator(arr) {
           return Array.isArray(arr) && arr.length > 0;
         },
-        message: "At least one blog image is required.",
+        message: "At least one image of trip is required.",
       },
     },
     hashtags: {
