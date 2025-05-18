@@ -18,10 +18,6 @@ const guideSchema = new Schema(
       type: String,
       required: true,
     },
-    refreshToken: {
-      type: String,
-      default: "",
-    },
     contactNumber: {
       type: String,
       required: true,
@@ -33,6 +29,12 @@ const guideSchema = new Schema(
         message: (props) => `${props.value} is not a valid contact number!`,
       },
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    otp: String,
+    otpExpiry: Date,
     description: {
       type: String,
       default: "",
