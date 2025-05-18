@@ -14,15 +14,17 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    otp: String,
+    otpExpiry: Date,
     password: {
       type: String,
       required: true,
     },
     profileImage: {
-      type: String,
-      default: "",
-    },
-    refreshToken: {
       type: String,
       default: "",
     },
