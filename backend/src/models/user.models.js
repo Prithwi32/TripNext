@@ -18,33 +18,22 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    blogs: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Blog",
-      },
-    ],
-    previousTrips: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Trip",
-      },
-    ],
     profileImage: {
       type: String,
       default: "",
     },
-    bookMarkList: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Trip",
-      },
-    ],
     refreshToken: {
       type: String,
+      default: "",
+    },
+    about: {
+      type: String,
+      default: "",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 export const User = mongoose.model("User", userSchema);
