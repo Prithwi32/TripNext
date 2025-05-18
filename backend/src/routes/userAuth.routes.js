@@ -3,12 +3,6 @@ import { loginUser, resendOtp, signupUser, verifyUser } from "../controllers/use
 
 const router = Router();
 
-
-// api/user/signup
-// api/user/verify
-// api/user/resend-verify
-// api/user/login -> dashboard
-
 //unsecure routes
 router.route("/signup").post(signupUser);
 router.route("/verify").post(verifyUser);
