@@ -91,7 +91,11 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Access denied: Incorrect password");
   }
 
-  res.status(200).json({ message: "Login successful" });
+  res.status(200).json({ message: "Login successful", user:{
+    name: user.userName,
+    email: user.userEmail,
+    role: "user",
+  } });
 });
 
 //Resend OTP Controller (Regenerates OTP and sends it again)

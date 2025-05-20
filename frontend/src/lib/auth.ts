@@ -1,17 +1,19 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import type { NextAuthOptions, User } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import { axiosInstance } from "./axios";
+import jwt from "jsonwebtoken";
 
 declare module "next-auth" {
   interface Session {
     user: {
+      id: string;
       name?: string | null;
       email?: string | null;
-      image?: string | null;
       role?: string | null;
     };
   }
   interface User {
+    id: string;
     role?: string | null;
   }
 }
@@ -25,65 +27,79 @@ export const NEXT_AUTH: NextAuthOptions = {
         password: { label: "Password", type: "password" },
         role: { label: "Role", type: "text" },
       },
-    async authorize(credentials) {
-      if (!credentials) return null;
-      const { email, password, role } = credentials as {
-        email: string;
-        password: string;
-        role: string;
-      };
+      async authorize(credentials) {
+        if (!credentials) return null;
+        
+        const { email, password, role } = credentials;
+        const endpoint = role === "guide" ? "/api/guide/login" : "/api/user/login";
+        const data = role === "guide" 
+          ? { guideEmail: email, password }
+          : { userEmail: email, password };
 
-      try {
-        const response = await axiosInstance.post("/auth/login", {
-        email,
-        password,
-        role,
-        });
-
-        if (response.data && response.data.user) {
-        return {
-          id: response.data.user.id as string,
-          email: response.data.user.email as string,
-          role: response.data.user.role as string,
-        } as User;
+        try {
+          const response = await axiosInstance.post(endpoint, data);
+          
+          if (response.data?.user) {
+            return {
+              id: response.data.user._id || response.data.user.id,
+              email: response.data.user.email,
+              role: response.data.user.role,
+              name: response.data.user.name
+            };
+          }
+          throw new Error(response.data?.message || "Authentication failed");
+        } catch (error: any) {
+          throw new Error(error.response?.data?.message || "Authentication failed");
         }
-
-        throw new Error(response.data?.message || "Authentication failed");
-      } catch (error: any) {
-        if (error.response && error.response.data && error.response.data.message) {
-        throw new Error(error.response.data.message);
-        }
-        throw new Error(error.message || "Authentication failed");
-      }
-    },
+      },
     }),
   ],
-  session: {
+   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60, 
+    maxAge: 24 * 60 * 60, // 1 day
   },
   jwt: {
     secret: process.env.NEXTAUTH_SECRET,
+    encode: async ({ secret, token }) => {
+      return jwt.sign(token!, secret, { algorithm: 'HS256' });
+    },
+    decode: async ({ secret, token }) => {
+      return jwt.verify(token as string, secret, { algorithms: ['HS256'] }) as any;
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.email = (user as User).email;
-        token.role = (user as any).role;
+        token.id = user.id;
+        token.email = user.email;
+        token.role = user.role;
+        token.name = user.name;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.email = token.email as string;
-        (session.user as any).role = token.role as string;
-      } else if (token) {
-        session.user = {
-          email: token.email as string,
-          role: token.role as string,
-        };
-      }
+      session.user = {
+        id: token.id as string,
+        email: token.email as string,
+        role: token.role as string,
+        name: token.name as string,
+      };
       return session;
     },
+  },
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/login",
   },
 };

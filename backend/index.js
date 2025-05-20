@@ -6,6 +6,7 @@ import setupCloudinary from "./src/utils/cloudinary.js";
 import connectDB from "./src/db/index.js";
 import userRouter from "./src/routes/userAuth.routes.js";
 import guideRouter from "./src/routes/guideAuth.routes.js"
+import { isAuthenticated } from "./src/middleware/auth.js";
 
 dotenv.config();
 
@@ -39,6 +40,13 @@ app.use(cookieParser());
 // Use authRoutes as router middleware for /api
 app.use("/api/user", userRouter);
 app.use("/api/guide", guideRouter);
+
+// global catch
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(statusCode).json({ message });
+});
 
 // Start server
 app.listen(PORT, () => {

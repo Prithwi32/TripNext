@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, SunMoon } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import toast from "react-hot-toast";
 
@@ -29,11 +30,11 @@ export default function Home() {
             className="group px-24 sm:px-8"
             size="lg"
             onClick={() => {
-              toast.dismiss();
-              toast.success("Welcome back");
+              signOut();
+              toast.success("Logged out successfully");
             }}
           >
-            Primary
+            Logout
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
           <Button
