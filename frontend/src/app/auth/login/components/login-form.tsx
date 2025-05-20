@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-// import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Mail, Lock, ArrowRight } from "lucide-react"
+import { signIn } from "next-auth/react"
+import toast from "react-hot-toast"
 
 export function LoginForm() {
   const router = useRouter()
@@ -24,11 +25,21 @@ export function LoginForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/dashboard")
-    }, 1500)
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+      role,
+    })
+
+    setIsLoading(false)
+
+    if (res?.ok) {
+      toast.success("Logged in successfully!")
+      router.push("/")
+    } else {
+      toast.error(res?.error || "Login failed. Please check your credentials.")
+    }
   }
 
   return (

@@ -91,7 +91,11 @@ const loginGuide = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Access denied: Incorrect password");
   }
 
-  res.status(200).json({ message: "Login successful" });
+  res.status(200).json({ message: "Login successful" , user:{
+    name: guide.guideName,
+    email: guide.guideEmail,
+    role: "guide",
+  }});
 });
 
 // RESEND OTP
