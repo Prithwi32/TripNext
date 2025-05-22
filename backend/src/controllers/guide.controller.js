@@ -129,9 +129,24 @@ const resendOtpGuide = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "New OTP sent to guide's email" });
 });
 
+//get all the details of the guide
+const getGuideDetails = asyncHandler(async (req, res) => {
+});
+
+//change the current password to a new password
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+});
+
+//update description, contact Number and guideName (one or all)
+const updateAccountDetails = asyncHandler(async (req, res) => {
+});
+
 export {
   signupGuide,
   verifyGuide,
   loginGuide,
-  resendOtpGuide
+  resendOtpGuide,
+  updateAccountDetails,
+  changeCurrentPassword,
+  getGuideDetails
 };

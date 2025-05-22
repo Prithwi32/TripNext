@@ -129,4 +129,24 @@ const resendOtp = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "New OTP sent to your email" });
 });
 
-export { signupUser, verifyUser, loginUser, resendOtp };
+//get all the detail of a user
+const getUserDetails = asyncHandler(async (req, res) =>{
+});
+
+//change the current password to a new password
+const changeCurrentPassword = asyncHandler(async (req, res) =>{
+});
+
+//update about, username and email (if needed) 
+const updateAccountDetails = asyncHandler(async (req, res) => {
+});
+
+export { 
+  signupUser,
+  verifyUser,
+  loginUser, 
+  resendOtp, 
+  getUserDetails, 
+  changeCurrentPassword, 
+  updateAccountDetails 
+};
