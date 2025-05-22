@@ -8,7 +8,11 @@ import { ApiError } from "../utils/ApiError.js";
 const signupGuide = asyncHandler(async (req, res) => {
   const { guideName, guideEmail, password, contactNumber } = req.body;
 
-  if ([guideName, guideEmail, password, contactNumber].some(field => !field || field.trim() === "")) {
+  if (
+    [guideName, guideEmail, password, contactNumber].some(
+      (field) => !field || field.trim() === ""
+    )
+  ) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -17,7 +21,10 @@ const signupGuide = asyncHandler(async (req, res) => {
   });
 
   if (existingGuide) {
-    throw new ApiError(400, "Guide with provided email or contact number already exists");
+    throw new ApiError(
+      400,
+      "Guide with provided email or contact number already exists"
+    );
   }
 
   const hashedPassword = await hash(password, 10);
@@ -91,11 +98,14 @@ const loginGuide = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Access denied: Incorrect password");
   }
 
-  res.status(200).json({ message: "Login successful" , user:{
-    name: guide.guideName,
-    email: guide.guideEmail,
-    role: "guide",
-  }});
+  res.status(200).json({
+    message: "Login successful",
+    user: {
+      name: guide.guideName,
+      email: guide.guideEmail,
+      role: "guide",
+    },
+  });
 });
 
 // RESEND OTP
@@ -131,14 +141,42 @@ const resendOtpGuide = asyncHandler(async (req, res) => {
 
 //get all the details of the guide
 const getGuideDetails = asyncHandler(async (req, res) => {
+  const { _id } = req.query;
+  console.log(_id);
+  const guideDetails = await Guide.findById(_id);
+  console.log(guideDetails);
+  if (!guideDetails) {
+    throw new ApiError(404, "No user found");
+  }
+
+  res.status(200).json({
+    message: "Fetched Guide details successfully!",
+    data: guideDetails,
+  });
 });
 
 //change the current password to a new password
-const changeCurrentPassword = asyncHandler(async (req, res) => {
-});
+const changeCurrentPassword = asyncHandler(async (req, res) => {});
 
 //update description, contact Number and guideName (one or all)
 const updateAccountDetails = asyncHandler(async (req, res) => {
+  const accountDetails = req.body;
+  const guideEmail = req.user.email;
+  const details = await Guide.findOne({ guideEmail: guideEmail });
+  if (!accountDetails.contactNumber || !accountDetails.description) {
+    throw new ApiError(400, "All fields are required");
+  }
+  const updatedDetails = await Guide.findByIdAndUpdate(
+    details?._id,
+    accountDetails,
+    {
+      new: true,
+    }
+  );
+  res.status(200).json({
+    success: true,
+    message: "Guide details updated successfully successfully",
+  });
 });
 
 export {
@@ -148,5 +186,5 @@ export {
   resendOtpGuide,
   updateAccountDetails,
   changeCurrentPassword,
-  getGuideDetails
+  getGuideDetails,
 };
