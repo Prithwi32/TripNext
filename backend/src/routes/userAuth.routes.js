@@ -12,6 +12,7 @@ import {
 import { createTrip, deleteTrip, updateTrip, viewAllTrip, viewTrips } from "../controllers/trip.controller.js";
 import { upload } from "../middleware/multer.middlewares.js";
 import { isAuthenticated } from "../middleware/auth.js";
+import { updateBlog } from "../controllers/blog.controller.js";
 
 const router = Router();
 
@@ -37,5 +38,7 @@ router
 router.route("/user").get(isAuthenticated, getUserDetails);
 router.route("/changePassword").patch(isAuthenticated, changeCurrentPassword);
 router.route("/update").patch(isAuthenticated, updateAccountDetails);
+
+router.route("/updateBlog/:id").post(upload.fields([{ name: "blogImages", maxCount: 5 }]),updateBlog)
 
 export default router;
