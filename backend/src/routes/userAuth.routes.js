@@ -19,7 +19,6 @@ import {
 } from "../controllers/trip.controller.js";
 import { upload } from "../middleware/multer.middlewares.js";
 import { isAuthenticated } from "../middleware/auth.js";
-import { updateBlog } from "../controllers/blog.controller.js";
 
 const router = Router();
 
@@ -51,6 +50,5 @@ router.route("/user").get(isAuthenticated, getUserDetails);
 router.route("/change-password").post(changeCurrentPassword);
 router.route("/update").patch(isAuthenticated, updateAccountDetails);
 
-router.route("/updateBlog/:id").post(upload.fields([{ name: "blogImages", maxCount: 5 }]),updateBlog)
 
 export default router;
