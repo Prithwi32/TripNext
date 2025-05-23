@@ -139,8 +139,8 @@ const forgetPassword = asyncHandler(async (req, res) => {});
 
 //get all the detail of a user
 const getUserDetails = asyncHandler(async (req, res) => {
-  const { _id } = req.query;
-  const userDetails = await User.findById(_id);
+  const userEmail = req.user.email;
+  const userDetails = await User.findOne({userEmail});
   console.log(userDetails);
   if (!userDetails) {
     throw new ApiError(404, "No user found");

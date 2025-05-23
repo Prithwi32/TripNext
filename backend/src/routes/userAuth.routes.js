@@ -34,8 +34,8 @@ router
   .post(isAuthenticated, upload.fields([{ name: "tripImages", maxCount: 5 }]), createTrip);
 
 //user related routes
-router.route("/:userId").get(isAuthenticated, getUserDetails);
+router.route("/user").get(isAuthenticated, getUserDetails);
 router.route("/changePassword").patch(isAuthenticated, changeCurrentPassword);
-router.route("/update/:userId").patch(isAuthenticated, updateAccountDetails);
+router.route("/update").patch(isAuthenticated, updateAccountDetails);
 
 export default router;
