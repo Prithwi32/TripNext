@@ -8,7 +8,11 @@ import { ApiError } from "../utils/ApiError.js";
 const signupUser = asyncHandler(async (req, res) => {
   const { userName, userEmail, password } = req.body;
 
-  if ([userName, userEmail, password].some((field) => !field || field.trim() === "")) {
+  if (
+    [userName, userEmail, password].some(
+      (field) => !field || field.trim() === ""
+    )
+  ) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -38,7 +42,6 @@ const signupUser = asyncHandler(async (req, res) => {
 
   res.status(201).json({ message: "OTP sent to your email" });
 });
-
 
 // OTP Verification Controller (Validates OTP and marks user as verified)
 const verifyUser = asyncHandler(async (req, res) => {
@@ -91,11 +94,14 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Access denied: Incorrect password");
   }
 
-  res.status(200).json({ message: "Login successful", user:{
-    name: user.userName,
-    email: user.userEmail,
-    role: "user",
-  } });
+  res.status(200).json({
+    message: "Login successful",
+    user: {
+      name: user.userName,
+      email: user.userEmail,
+      role: "user",
+    },
+  });
 });
 
 //Resend OTP Controller (Regenerates OTP and sends it again)
@@ -129,4 +135,142 @@ const resendOtp = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "New OTP sent to your email" });
 });
 
-export { signupUser, verifyUser, loginUser, resendOtp };
+const forgetPassword = asyncHandler(async (req, res) => {
+  const { userEmail } = req.body;
+
+  if (!userEmail) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  const user = await User.findOne({ userEmail });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedOtp = await hash(otp, 10);
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+  user.otp = hashedOtp;
+  user.otpExpiry = otpExpiry;
+  await user.save();
+
+  await sendOTP(userEmail, otp);
+
+  res.status(200).json({
+    message: "OTP sent to your email for password reset",
+  });
+});
+
+//reset password
+const resetPassword = asyncHandler(async (req, res) => {
+  const { userEmail, otp, newPassword } = req.body;
+
+  if (!userEmail || !otp || !newPassword) {
+    throw new ApiError(400, "Email, OTP, and new password are required");
+  }
+
+  const user = await User.findOne({ userEmail });
+
+  if (!user || !user.otp || user.otpExpiry < new Date()) {
+    throw new ApiError(400, "OTP expired or invalid");
+  }
+
+  const isOtpValid = await compare(otp, user.otp);
+  if (!isOtpValid) {
+    throw new ApiError(400, "Incorrect OTP");
+  }
+
+  const hashedPassword = await hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.otp = undefined;
+  user.otpExpiry = undefined;
+  user.isVerified = true; // Optional: ensure they are verified after this
+  await user.save();
+
+  res.status(200).json({
+    message: "Password reset successfully",
+  });
+});
+
+//get all the detail of a user
+const getUserDetails = asyncHandler(async (req, res) => {
+  const userEmail = req.user.email;
+  const userDetails = await User.findOne({ userEmail });
+  console.log(userDetails);
+  if (!userDetails) {
+    throw new ApiError(404, "No user found");
+  }
+
+  res.status(200).json({
+    message: "Fetched user details successfully!",
+    data: userDetails,
+  });
+});
+
+//change the current password to a new password
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userEmail = req.user.email;
+
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, "Old and new passwords are required");
+  }
+
+  const user = await User.findOne({ userEmail });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const isMatch = await compare(oldPassword, user.password);
+  if (!isMatch) {
+    throw new ApiError(401, "Old password is incorrect");
+  }
+
+  const hashedNewPassword = await hash(newPassword, 10);
+  user.password = hashedNewPassword;
+  await user.save();
+
+  res.status(200).json({
+    message: "Password changed successfully",
+  });
+});
+
+//update about, username and email (if needed)
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const accountDetails = req.body;
+  const userEmail = req.user.email;
+  const details = await User.findOne({ userEmail: userEmail });
+  if (
+    !accountDetails.userName ||
+    !accountDetails.profileImage ||
+    !accountDetails.about
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+  const updatedDetails = await User.findByIdAndUpdate(
+    details?._id,
+    accountDetails,
+    {
+      new: true,
+    }
+  );
+  res.status(200).json({
+    success: true,
+    message: "User details updated successfully successfully",
+  });
+});
+
+export {
+  signupUser,
+  verifyUser,
+  loginUser,
+  resendOtp,
+  getUserDetails,
+  changeCurrentPassword,
+  updateAccountDetails,
+  forgetPassword,
+  resetPassword
+};
