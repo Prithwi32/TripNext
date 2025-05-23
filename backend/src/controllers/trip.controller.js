@@ -5,7 +5,6 @@ import {
   uploadOnCloudinary,
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
-import {Blog} from "../models/blog.models.js"
 import { User } from "../models/user.models.js";
 
 // get all Trips belonging to all users
@@ -202,7 +201,7 @@ const updateTrip = asyncHandler(async (req, res) => {
 //delete a trip belonging to a particular user
 const deleteTrip = asyncHandler(async (req, res) => {
   const { tripId } = req.params;
-  const userEmail = req.user.email;
+  const userEmail = "prajwalbayari4@gmail.com";
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
   
@@ -217,17 +216,21 @@ const deleteTrip = asyncHandler(async (req, res) => {
   }
 
   // Delete trip images from Cloudinary
-  for (const url of trip.tripImages) {
-    const publicId = url.split("/").pop().split(".")[0];
-    await deleteFromCloudinary(publicId);
+  try {
+    await Trip.deleteOne({ _id: tripId });
+    for (const url of trip.tripImages) {
+      const publicId = url.split("/").pop().split(".")[0];
+      await deleteFromCloudinary(publicId);
+    }
+  
+    return res.status(200).json({
+      success: true,
+      message: "Trip deleted successfully",
+    });
+  } catch (error) {
+    console.log("Couldn't delete trip", error);
+    throw new ApiError(500, "Failed to delete trip.");
   }
-
-  await Trip.deleteOne({ _id: tripId });
-
-  return res.status(200).json({
-    success: true,
-    message: "Trip deleted successfully",
-  });
 });
 
 

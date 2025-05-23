@@ -28,7 +28,6 @@ const createBlog = asyncHandler(async (req, res) => {
   const tripDetails = await Trip.findById(trip);
 
   const imageFiles = req.files?.blogImages;
-  console.log(imageFiles);
   if (!imageFiles || !Array.isArray(imageFiles) || imageFiles.length === 0) {
     throw new ApiError(400, "At least one blog image must be uploaded");
   }
@@ -88,7 +87,7 @@ const createBlog = asyncHandler(async (req, res) => {
 
 //update a blog by user
 const updateBlog = asyncHandler(async (req, res) => {
-  const userEmail = "prajwalbayari4@gmail.com";
+  const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
   const { id: blogId } = req.params;
@@ -96,11 +95,10 @@ const updateBlog = asyncHandler(async (req, res) => {
   const blogDetails = await Blog.findById(blogId);
 
   if (blogDetails.user.toString() !== userId.toString()) {
-    throw new ApiError(401, "UserId does not match");
+    throw new ApiError(401, "UserId does not match. Unauthorized access!!");
   }
 
   const { blogDescription, hashtags = [] } = req.body;
-  console.log(hashtags, typeof hashtags);
 
   if (!blogDescription || blogDescription.trim() === "") {
     throw new ApiError(400, "BlogDescription are required");
@@ -138,8 +136,6 @@ const updateBlog = asyncHandler(async (req, res) => {
       new: true,
     });
 
-    console.log(blogDetails.hashtags);
-
     for (const url of oldImages) {
       const publicId = url.split("/").pop().split(".")[0];
       await deleteFromCloudinary(publicId);
@@ -167,12 +163,81 @@ const updateBlog = asyncHandler(async (req, res) => {
 });
 
 //delete a blog by id and user
-const deleteBlog = asyncHandler(async (req, res) => {});
+const deleteBlog = asyncHandler(async (req, res) => {
+  const userEmail = req.user.email;
+  const user = await User.findOne({ userEmail: userEmail });
+  const userId = user._id;
+  const { id: blogId } = req.params;
+
+  const blogDetails = await Blog.findById(blogId);
+
+  if (blogDetails.user.toString() !== userId.toString()) {
+    throw new ApiError(401, "UserId does not match. Unauthorized access!!");
+  }
+  const blogImages = blogDetails.blogImages;
+  const tripDetails = await Trip.findById(blogDetails.trip);
+  if (tripDetails) {
+    tripDetails.blogId = tripDetails.blogId.filter(
+      (id) => id.toString() !== blogId.toString()
+    );
+  }
+
+  try {
+    await Blog.findByIdAndDelete(blogId);
+    if (tripDetails) {
+      await Trip.findByIdAndUpdate(tripDetails._id, tripDetails);
+    }
+    for (const url of blogImages) {
+      const publicId = url.split("/").pop().split(".")[0];
+      await deleteFromCloudinary(publicId);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Blog deleted successfully",
+    });
+  } catch (error) {
+    console.log("Blog deletion failed", error);
+    throw new ApiError(500, "Failed to delete Blog.");
+  }
+});
 
 //get only the user blogs
-const getBlogs = asyncHandler(async (req, res) => {});
+const getMyBlogs = asyncHandler(async (req, res) => {
+  const userEmail = req.user.email;
+  const user = await User.findOne({ userEmail: userEmail });
+  const userId = user._id;
+
+  try {
+    const myBlogs = await Blog.find({ user: userId });
+    return res.status(200).json({
+      success: true,
+      message: "Fetched user's blogs",
+      data: myBlogs,
+    });
+  } catch (error) {
+    console.log("Can't fetch blogs", error);
+    throw new ApiError(500, "Failed to fetch user's blogs.");
+  }
+});
 
 //get all blogs except for the blogs created by the requesting user
-const getAllBlogs = asyncHandler(async (req, res) => {});
+const getAllBlogs = asyncHandler(async (req, res) => {
+  const userEmail = req.user.email;
+  const user = await User.findOne({ userEmail: userEmail });
+  const userId = user._id;
 
-export { createBlog, updateBlog, deleteBlog, getAllBlogs, getBlogs };
+  try {
+    const allBlogs = await Blog.find({ user: { $ne: userId } });
+    return res.status(200).json({
+      success: true,
+      message: "Fetched all blogs",
+      data: allBlogs,
+    });
+  } catch (error) {
+    console.log("Can't fetch blogs", error);
+    throw new ApiError(500, "Failed to fetch all blogs.");
+  }
+});
+
+export { createBlog, updateBlog, deleteBlog, getAllBlogs, getMyBlogs };
