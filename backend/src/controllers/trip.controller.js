@@ -38,7 +38,6 @@ const viewAllTrip = asyncHandler(async (req, res) => {
   });
 });
 
-
 //get all Tips belonging to a particular user
 const viewTrips = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
@@ -63,10 +62,9 @@ const viewTrips = asyncHandler(async (req, res) => {
   });
 });
 
-
 //create a trip for a particular user
 const createTrip = asyncHandler(async (req, res) => {
-  const userEmail = req.user.email;
+  const userEmail = "nirmith10@gmail.com";//req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
 
@@ -200,7 +198,6 @@ const updateTrip = asyncHandler(async (req, res) => {
     data: trip,
   });
 });
-
 
 //delete a trip belonging to a particular user
 const deleteTrip = asyncHandler(async (req, res) => {
