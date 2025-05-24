@@ -135,6 +135,7 @@ const resendOtp = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "New OTP sent to your email" });
 });
 
+//lets user change the password in case they forget it
 const forgetPassword = asyncHandler(async (req, res) => {
   const { userEmail } = req.body;
 

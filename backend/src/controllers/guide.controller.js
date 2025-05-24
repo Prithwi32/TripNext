@@ -139,12 +139,26 @@ const resendOtpGuide = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "New OTP sent to guide's email" });
 });
 
-//get all the details of the guide
+const getAllGuides = asyncHandler(async (req, res) => {
+  const guides = await Guide.find({}, "-password -otp -otpExpiry -__v");
+
+  if (!guides || guides.length === 0) {
+    throw new ApiError(404, "No guides found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "All guides fetched successfully",
+    data: guides,
+  });
+});
+
+//get all the details of a single guide
 const getGuideDetails = asyncHandler(async (req, res) => {
   const { _id } = req.query;
-  console.log(_id);
-  const guideDetails = await Guide.findById(_id);
-  console.log(guideDetails);
+  // console.log(_id);
+  const guideDetails = await Guide.findById(_id, "-password -otp -otpExpiry -__v");
+  // console.log(guideDetails);
   if (!guideDetails) {
     throw new ApiError(404, "No user found");
   }
@@ -154,9 +168,6 @@ const getGuideDetails = asyncHandler(async (req, res) => {
     data: guideDetails,
   });
 });
-
-//change the current password to a new password
-const changeCurrentPassword = asyncHandler(async (req, res) => {});
 
 //update description, contact Number and guideName (one or all)
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -179,6 +190,95 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   });
 });
 
+// change current password
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const guideEmail = req.user?.email;
+
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, "Old and new passwords are required");
+  }
+
+  const guide = await Guide.findOne({ guideEmail });
+
+  if (!guide) {
+    throw new ApiError(404, "Guide not found");
+  }
+
+  const isPasswordValid = await compare(oldPassword, guide.password);
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Old password is incorrect");
+  }
+
+  if (oldPassword === newPassword) {
+    throw new ApiError(400, "New password must be different from old password");
+  }
+
+  const hashedPassword = await hash(newPassword, 10);
+  guide.password = hashedPassword;
+  await guide.save();
+
+  res.status(200).json({ message: "Password changed successfully" });
+});
+
+// forget password
+const forgetPassword = asyncHandler(async (req, res) => {
+  const { guideEmail } = req.body;
+
+  if (!guideEmail) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  const guide = await Guide.findOne({ guideEmail });
+
+  if (!guide) {
+    throw new ApiError(404, "Guide not found");
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedOtp = await hash(otp, 10);
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+  guide.otp = hashedOtp;
+  guide.otpExpiry = otpExpiry;
+  await guide.save();
+
+  await sendOTP(guideEmail, otp);
+
+  res
+    .status(200)
+    .json({ message: "OTP sent to guide's email for password reset" });
+});
+
+// RESET PASSWORD
+const resetPassword = asyncHandler(async (req, res) => {
+  const { guideEmail, otp, newPassword } = req.body;
+
+  if (!guideEmail || !otp || !newPassword) {
+    throw new ApiError(400, "Email, OTP and new password are required");
+  }
+
+  const guide = await Guide.findOne({ guideEmail });
+
+  if (!guide || !guide.otp || guide.otpExpiry < new Date()) {
+    throw new ApiError(400, "OTP expired or invalid");
+  }
+
+  const isOtpValid = await compare(otp, guide.otp);
+  if (!isOtpValid) {
+    throw new ApiError(400, "Incorrect OTP");
+  }
+
+  const hashedPassword = await hash(newPassword, 10);
+  guide.password = hashedPassword;
+  guide.otp = undefined;
+  guide.otpExpiry = undefined;
+
+  await guide.save();
+
+  res.status(200).json({ message: "Password reset successfully" });
+});
+
 export {
   signupGuide,
   verifyGuide,
@@ -187,4 +287,7 @@ export {
   updateAccountDetails,
   changeCurrentPassword,
   getGuideDetails,
+  forgetPassword,
+  resetPassword,
+  getAllGuides,
 };
