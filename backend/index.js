@@ -4,9 +4,10 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import setupCloudinary from "./src/utils/cloudinary.js";
 import connectDB from "./src/db/index.js";
-import userRouter from "./src/routes/userAuth.routes.js";
-import guideRouter from "./src/routes/guideAuth.routes.js"
-import { isAuthenticated } from "./src/middleware/auth.js";
+import userRouter from "./src/routes/user.routes.js";
+import guideRouter from "./src/routes/guide.routes.js";
+import tripRouter from "./src/routes/trip.routes.js";
+import packageRouter from "./src/routes/package.routes.js";
 
 dotenv.config();
 
@@ -27,19 +28,12 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// api/user/signup
-// api/user/verify
-// api/user/resend-verify
-// api/user/login -> dashboard
-
-// api/guide/signup
-// api/guide/verify
-// api/guide/resend-verify
-// api/guide/login -> dashboard
-
-// Use authRoutes as router middleware for /api
+// endpoints of routes
 app.use("/api/user", userRouter);
 app.use("/api/guide", guideRouter);
+app.use("/api/trip", tripRouter);
+app.use("/api/package", packageRouter);
+
 
 // global catch
 app.use((err, req, res, next) => {

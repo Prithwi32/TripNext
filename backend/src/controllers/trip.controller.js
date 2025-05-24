@@ -234,4 +234,10 @@ const deleteTrip = asyncHandler(async (req, res) => {
 });
 
 
-export { viewAllTrip, viewTrips, createTrip, deleteTrip, updateTrip };
+export { 
+  viewAllTrip, 
+  viewTrips, 
+  createTrip, 
+  deleteTrip, 
+  updateTrip 
+};

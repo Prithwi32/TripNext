@@ -46,7 +46,7 @@ router
   );
 
 //user related routes
-router.route("/user").get(isAuthenticated, getUserDetails);
+router.route("/").get(isAuthenticated, getUserDetails);
 router.route("/change-password").post(changeCurrentPassword);
 router.route("/update").patch(isAuthenticated, updateAccountDetails);
 
