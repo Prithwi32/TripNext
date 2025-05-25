@@ -3,8 +3,8 @@ import {
   createTrip,
   deleteTrip,
   updateTrip,
-  viewAllTrip,
-  viewTrips,
+  viewAllTrips,
+  viewTrip,
 } from "../controllers/trip.controller.js";
 import { upload } from "../middleware/multer.middlewares.js";
 import { isAuthenticated } from "../middleware/auth.js";
@@ -12,14 +12,14 @@ import { isAuthenticated } from "../middleware/auth.js";
 const router = Router();
 
 //unsecure routes:
-router.route("/trip").get(viewAllTrip);
+router.route("/").get(viewAllTrips);
 
 //secure routes:
-router.route("/trip/:tripId").get(isAuthenticated, viewTrips);
-router.route("/trip/update/:tripId").patch(isAuthenticated, updateTrip);
-router.route("/trip/delete/:tripId").delete(isAuthenticated, deleteTrip);
+router.route("/:tripId").get(isAuthenticated, viewTrip);
+router.route("/update/:tripId").patch(isAuthenticated, updateTrip);
+router.route("/delete/:tripId").delete(isAuthenticated, deleteTrip);
 router
-  .route("/createTrip")
+  .route("/create-trip")
   .post(
     isAuthenticated,
     upload.fields([{ name: "tripImages", maxCount: 5 }]),

@@ -3,8 +3,9 @@ import { Guide } from "../models/guide.models.js";
 import sendOTP from "../utils/sendEmail.js";
 import { hash, compare } from "bcryptjs";
 import { ApiError } from "../utils/ApiError.js";
+import { Package } from "../models/package.models.js";
 
-// SIGNUP GUIDE
+// signup guide
 const signupGuide = asyncHandler(async (req, res) => {
   const { guideName, guideEmail, password, contactNumber } = req.body;
 
@@ -47,7 +48,7 @@ const signupGuide = asyncHandler(async (req, res) => {
   res.status(201).json({ message: "OTP sent to your email" });
 });
 
-// VERIFY GUIDE
+//verify guide
 const verifyGuide = asyncHandler(async (req, res) => {
   const { guideEmail, otp } = req.body;
 
@@ -74,7 +75,7 @@ const verifyGuide = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Guide email verified successfully" });
 });
 
-// LOGIN GUIDE
+//login guide
 const loginGuide = asyncHandler(async (req, res) => {
   const { guideEmail, password } = req.body;
 
@@ -108,7 +109,7 @@ const loginGuide = asyncHandler(async (req, res) => {
   });
 });
 
-// RESEND OTP
+//resend otp
 const resendOtpGuide = asyncHandler(async (req, res) => {
   const { guideEmail } = req.body;
 
@@ -139,6 +140,7 @@ const resendOtpGuide = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "New OTP sent to guide's email" });
 });
 
+//get all guides
 const getAllGuides = asyncHandler(async (req, res) => {
   const guides = await Guide.find({}, "-password -otp -otpExpiry -__v");
 
@@ -158,6 +160,7 @@ const getGuideDetails = asyncHandler(async (req, res) => {
   const { _id } = req.query;
   // console.log(_id);
   const guideDetails = await Guide.findById(_id, "-password -otp -otpExpiry -__v");
+  const packageDetails = await Package.findMany({guide: _id});
   // console.log(guideDetails);
   if (!guideDetails) {
     throw new ApiError(404, "No user found");
@@ -165,7 +168,7 @@ const getGuideDetails = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     message: "Fetched Guide details successfully!",
-    data: guideDetails,
+    data: {guide: guideDetails, package: packageDetails },
   });
 });
 
@@ -250,7 +253,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
     .json({ message: "OTP sent to guide's email for password reset" });
 });
 
-// RESET PASSWORD
+// reset password
 const resetPassword = asyncHandler(async (req, res) => {
   const { guideEmail, otp, newPassword } = req.body;
 

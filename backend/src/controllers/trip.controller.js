@@ -8,7 +8,7 @@ import {
 import { User } from "../models/user.models.js";
 
 // get all Trips belonging to all users
-const viewAllTrip = asyncHandler(async (req, res) => {
+const viewAllTrips = asyncHandler(async (req, res) => {
   const trips = await Trip.find({})
     .populate({
       path: "user",
@@ -38,7 +38,7 @@ const viewAllTrip = asyncHandler(async (req, res) => {
 });
 
 //get all Tips belonging to a particular user
-const viewTrips = asyncHandler(async (req, res) => {
+const viewTrip = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
@@ -235,8 +235,8 @@ const deleteTrip = asyncHandler(async (req, res) => {
 
 
 export { 
-  viewAllTrip, 
-  viewTrips, 
+  viewAllTrips, 
+  viewTrip, 
   createTrip, 
   deleteTrip, 
   updateTrip 

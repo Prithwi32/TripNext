@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { Package } from "../models/package.model.js";
-import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import { Package } from "../models/package.models.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 
 // Get all packages belonging to a particular guide
 const getPackage = asyncHandler(async (req, res) => {
@@ -39,25 +42,65 @@ const getAllPackage = asyncHandler(async (req, res) => {
   });
 });
 
+// Get the details of a single package based on packageId
+const getPackageById = asyncHandler(async (req, res) => {
+  const { packageId } = req.params;
+
+  if (!packageId) {
+    throw new ApiError(400, "Package ID is required");
+  }
+
+  const foundPackage = await Package.findById(packageId).populate("guide");
+
+  if (!foundPackage) {
+    throw new ApiError(404, "Package not found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Package fetched successfully",
+    data: foundPackage,
+  });
+});
+
 // Create a package for a particular guide
 const createPackage = asyncHandler(async (req, res) => {
-  const {
+  let {
     locations,
     packageDescription = "",
     cost,
     guide,
     tripDays,
   } = req.body;
+  if (typeof locations === "string") {
+    try {
+      const parsed = JSON.parse(locations);
+      locations = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (err) {
+      locations = [locations]; // treat raw string as single location
+    }
+  }
 
   if (
-    !Array.isArray(locations) || locations.length === 0 ||
-    !guide || !tripDays || !cost
+    !Array.isArray(locations) ||
+    locations.length === 0 ||
+    !guide ||
+    !tripDays ||
+    !cost
   ) {
     throw new ApiError(400, "All required fields must be provided");
   }
 
-  if (isNaN(cost) || Number(cost) < 0 || isNaN(tripDays) || Number(tripDays) < 1) {
-    throw new ApiError(400, "Cost must be non-negative and tripDays at least 1");
+  if (
+    isNaN(cost) ||
+    Number(cost) < 0 ||
+    isNaN(tripDays) ||
+    Number(tripDays) < 1
+  ) {
+    throw new ApiError(
+      400,
+      "Cost must be non-negative and tripDays at least 1"
+    );
   }
 
   // Validate & Upload images
@@ -107,19 +150,17 @@ const createPackage = asyncHandler(async (req, res) => {
     }
 
     console.error("Package creation error:", error);
-    throw new ApiError(500, "Package creation failed. Uploaded images were deleted.");
+    throw new ApiError(
+      500,
+      "Package creation failed. Uploaded images were deleted."
+    );
   }
 });
 
 // Update a package belonging to a guide
 const updatePackage = asyncHandler(async (req, res) => {
   const { packageId } = req.params;
-  const {
-    locations,
-    packageDescription,
-    cost,
-    tripDays,
-  } = req.body;
+  const { locations, packageDescription, cost, tripDays } = req.body;
 
   if (!packageId) {
     throw new ApiError(400, "Package ID is required");
@@ -222,4 +263,5 @@ export {
   createPackage,
   updatePackage,
   deletePackage,
+  getPackageById,
 };
