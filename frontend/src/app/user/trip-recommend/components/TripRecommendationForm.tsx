@@ -1,200 +1,254 @@
-"use client"
-import { useState, useEffect } from "react"
-import toast from "react-hot-toast"
-import Image from "next/image"
-import { TRIP_TYPES, ACTIVITIES } from "../constants"
+"use client";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import Image from "next/image";
+import { TRIP_TYPES, ACTIVITIES } from "../constants";
+
+interface Recommendation {
+  Place: string;
+  Type: string;
+  Budget: string;
+  Season: string;
+  Activities?: string;
+  State: string;
+  Country: string;
+  Score: number;
+  imageUrl?: string | null;
+}
+
+interface FormData {
+  trip_type: string;
+  budget: string;
+  season: string;
+  activities: string;
+  state: string;
+  country: string;
+}
+
+interface SubmissionData extends Omit<FormData, "activities"> {
+  activities: string | string[];
+}
 
 export default function TripRecommendation() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     trip_type: "",
     budget: "",
     season: "",
     activities: "",
     state: "",
     country: "",
-  })
-  const [recommendations, setRecommendations] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [suggestions, setSuggestions] = useState({
+  });
+
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Add explicit types for suggestions
+  const [suggestions, setSuggestions] = useState<{
+    trip_type: string[];
+    activities: string[];
+  }>({
     trip_type: [],
     activities: [],
-  })
+  });
+
   const [showSuggestions, setShowSuggestions] = useState({
     trip_type: false,
     activities: false,
-  })
-  const [imageCache, setImageCache] = useState({})
-  const [imageErrors, setImageErrors] = useState({})
+  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
+  const [imageCache, setImageCache] = useState<Record<string, string>>({});
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
+    }));
 
     // Handle suggestions
     if (name === "trip_type") {
-      const tripTypeSuggestions = TRIP_TYPES.filter((type) => type.toLowerCase().includes(value.toLowerCase()))
+      const tripTypeSuggestions = TRIP_TYPES.filter((type) =>
+        type.toLowerCase().includes(value.toLowerCase())
+      );
       setSuggestions((prev) => ({
         ...prev,
         trip_type: tripTypeSuggestions,
-      }))
+      }));
       setShowSuggestions((prev) => ({
         ...prev,
         trip_type: true,
-      }))
+      }));
     } else if (name === "activities") {
-      const activitySuggestions = ACTIVITIES.filter((activity) => activity.toLowerCase().includes(value.toLowerCase()))
+      const activitySuggestions = ACTIVITIES.filter((activity) =>
+        activity.toLowerCase().includes(value.toLowerCase())
+      );
       setSuggestions((prev) => ({
         ...prev,
         activities: activitySuggestions,
-      }))
+      }));
       setShowSuggestions((prev) => ({
         ...prev,
         activities: true,
-      }))
+      }));
     }
-  }
+  };
 
-  const handleSuggestionClick = (field, value) => {
+  const handleSuggestionClick = (field: string, value: string) => {
     if (field === "activities") {
       const currentActivities = formData.activities
         .split(",")
         .map((a) => a.trim())
-        .filter((a) => a)
+        .filter((a) => a);
 
       if (!currentActivities.includes(value)) {
-        const newActivities = [...currentActivities, value].join(", ")
+        const newActivities = [...currentActivities, value].join(", ");
         setFormData((prev) => ({
           ...prev,
           activities: newActivities,
-        }))
+        }));
       }
     } else {
       // For other fields, replace the value
       setFormData((prev) => ({
         ...prev,
         [field]: value,
-      }))
+      }));
     }
     setShowSuggestions((prev) => ({
       ...prev,
       [field]: false,
-    }))
-  }
+    }));
+  };
 
   useEffect(() => {
     const handleClickOutside = () => {
       setShowSuggestions({
         trip_type: false,
         activities: false,
-      })
-    }
+      });
+    };
 
-    document.addEventListener("click", handleClickOutside)
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener("click", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
-  const validateInput = (data) => {
+  const validateInput = (data: FormData) => {
     // Check if all empty
-    const allEmpty = Object.values(data).every((value) => !value.trim())
+    const allEmpty = Object.values(data).every(
+      (value) => !String(value).trim()
+    );
     if (allEmpty) {
-      toast.error("Please fill out at least one field.")
-      return false
+      toast.error("Please fill out at least one field.");
+      return false;
     }
 
     // Check special characters only fields
     const invalidField = Object.entries(data).some(([key, val]) => {
-      if (!val.trim()) return false
-      return !/[a-zA-Z0-9]/.test(val)
-    })
+      if (!String(val).trim()) return false;
+      return !/[a-zA-Z0-9]/.test(String(val));
+    });
 
     if (invalidField) {
-      toast.error("Please enter valid characters in the fields.")
-      return false
+      toast.error("Please enter valid characters in the fields.");
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
-  const fetchImageFromGoogle = async (placeName) => {
+  const fetchImageFromGoogle = async (placeName: string | number) => {
     // Check if we already have this image in cache
     if (imageCache[placeName]) {
-      return imageCache[placeName]
+      return imageCache[placeName];
     }
 
     try {
-      const searchQuery = `${placeName} travel destination`
-      const url = `https://www.googleapis.com/customsearch/v1?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&cx=${process.env.NEXT_PUBLIC_GOOGLE_SEARCH_ENGINE_ID}&q=${encodeURIComponent(searchQuery)}&searchType=image&num=1`
+      const searchQuery = `${placeName} travel destination`;
+      const url = `https://www.googleapis.com/customsearch/v1?key=${
+        process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+      }&cx=${
+        process.env.NEXT_PUBLIC_GOOGLE_SEARCH_ENGINE_ID
+      }&q=${encodeURIComponent(searchQuery)}&searchType=image&num=1`;
 
-      const response = await fetch(url)
-      const data = await response.json()
+      const response = await fetch(url);
+      const data = await response.json();
 
       if (data.items && data.items.length > 0) {
-        const imageUrl = data.items[0].link
+        const imageUrl = data.items[0].link;
         // Save to cache
         setImageCache((prev) => ({
           ...prev,
           [placeName]: imageUrl,
-        }))
-        return imageUrl
+        }));
+        return imageUrl;
       }
 
       // If no image found, return null to use fallback
-      return null
+      return null;
     } catch (error) {
-      console.error("Error fetching image from Google:", error)
-      return null
+      console.error("Error fetching image from Google:", error);
+      return null;
     }
-  }
+  };
 
-  const getPlaceholderImage = (placeName) => {
-    return "https://images.unsplash.com/photo-1499591934245-40b55745b905?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dHJpcHxlbnwwfHwwfHx8MA%3D%3D"
-  }
+  const getPlaceholderImage = (placeName: string): string => {
+    return "https://images.unsplash.com/photo-1499591934245-40b55745b905?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dHJpcHxlbnwwfHwwfHx8MA%3D%3D";
+  };
 
-  const handleImageError = (placeName) => {
+  const handleImageError = (placeName: string): void => {
     setImageErrors((prev) => ({
       ...prev,
       [placeName]: true,
-    }))
-  }
+    }));
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setRecommendations([])
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setRecommendations([]);
 
-    // Prepare data, convert activities string to array
-    const data = { ...formData }
-    if (data.activities && data.activities.trim()) {
-      data.activities = data.activities
+    // Create a copy of form data for submission
+    const submissionData: SubmissionData = {
+      ...formData,
+      activities: formData.activities,
+    };
+
+    // Convert activities to array if there's input
+    if (
+      typeof submissionData.activities === "string" &&
+      submissionData.activities.trim()
+    ) {
+      submissionData.activities = submissionData.activities
         .split(",")
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0)
+        .map((item: string) => item.trim())
+        .filter((item: string) => item.length > 0);
     } else {
-      data.activities = []
+      submissionData.activities = [];
     }
 
     if (!validateInput(formData)) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const res = await fetch("https://prithwi-trip-recommendation-model.hf.space/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
+      const res = await fetch(
+        "https://prithwi-trip-recommendation-model.hf.space/recommend",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submissionData),
+        }
+      );
 
       if (!res.ok) {
-        const text = await res.text()
-        throw new Error(`API error ${res.status}: ${text}`)
+        const text = await res.text();
+        throw new Error(`API error ${res.status}: ${text}`);
       }
 
-      const recs = await res.json()
+      const recs = await res.json();
 
       if (!Array.isArray(recs) || recs.length === 0) {
         toast("No recommendations found. Try different criteria.", {
@@ -204,21 +258,21 @@ export default function TripRecommendation() {
             color: "var(--foreground)",
             border: "1px solid var(--border)",
           },
-        })
-        setIsLoading(false)
-        return
+        });
+        setIsLoading(false);
+        return;
       }
 
       // Fetch images for each recommendation
       const recsWithImages = await Promise.all(
         recs.map(async (rec) => {
-          const imageUrl = await fetchImageFromGoogle(rec.Place)
+          const imageUrl = await fetchImageFromGoogle(rec.Place);
           return {
             ...rec,
-            imageUrl: imageUrl || null, // Store the image URL or null if not found
-          }
-        }),
-      )
+            imageUrl: imageUrl || null,
+          };
+        })
+      );
 
       toast.success(`${recs.length} recommendations found!`, {
         style: {
@@ -226,21 +280,23 @@ export default function TripRecommendation() {
           color: "var(--foreground)",
           border: "1px solid var(--border)",
         },
-      })
+      });
 
-      setRecommendations(recsWithImages)
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
+      setRecommendations(recsWithImages);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast.error(`Error: ${errorMessage}`, {
         style: {
           background: "var(--background)",
           color: "var(--foreground)",
           border: "1px solid var(--border)",
         },
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -325,7 +381,9 @@ export default function TripRecommendation() {
 
       <div className="gradient-bg"></div>
       <div className="container mx-auto px-4 py-8 min-h-screen mt-12">
-        <h1 className="text-4xl font-bold text-center mb-8 text-primary">Discover Your Perfect Trip</h1>
+        <h1 className="text-4xl font-bold text-center mb-8 text-primary">
+          Discover Your Perfect Trip
+        </h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left side - Form */}
@@ -338,7 +396,10 @@ export default function TripRecommendation() {
               <div className="space-y-4">
                 {/* Trip Type Field */}
                 <div className="flex items-center space-x-4 relative">
-                  <label htmlFor="trip_type" className="w-32 text-lg font-medium text-primary">
+                  <label
+                    htmlFor="trip_type"
+                    className="w-32 text-lg font-medium text-primary"
+                  >
                     Trip Type
                   </label>
                   <input
@@ -350,27 +411,31 @@ export default function TripRecommendation() {
                     className="flex-1 p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter trip type..."
                   />
-                  {showSuggestions.trip_type && suggestions.trip_type.length > 0 && (
-                    <div className="suggestions-container">
-                      {suggestions.trip_type.map((type, index) => (
-                        <div
-                          key={index}
-                          className="suggestion-item"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleSuggestionClick("trip_type", type)
-                          }}
-                        >
-                          {type}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {showSuggestions.trip_type &&
+                    suggestions.trip_type.length > 0 && (
+                      <div className="suggestions-container">
+                        {suggestions.trip_type.map((type, index) => (
+                          <div
+                            key={index}
+                            className="suggestion-item"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSuggestionClick("trip_type", type);
+                            }}
+                          >
+                            {type}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
 
                 {/* Activities Field */}
                 <div className="flex items-center space-x-4 relative">
-                  <label htmlFor="activities" className="w-32 text-lg font-medium text-primary">
+                  <label
+                    htmlFor="activities"
+                    className="w-32 text-lg font-medium text-primary"
+                  >
                     Activities
                   </label>
                   <input
@@ -382,44 +447,57 @@ export default function TripRecommendation() {
                     className="flex-1 p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter activities..."
                   />
-                  {showSuggestions.activities && suggestions.activities.length > 0 && (
-                    <div className="suggestions-container">
-                      {suggestions.activities.map((activity, index) => (
-                        <div
-                          key={index}
-                          className="suggestion-item"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleSuggestionClick("activities", activity)
-                          }}
-                        >
-                          {activity}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {showSuggestions.activities &&
+                    suggestions.activities.length > 0 && (
+                      <div className="suggestions-container">
+                        {suggestions.activities.map((activity, index) => (
+                          <div
+                            key={index}
+                            className="suggestion-item"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSuggestionClick("activities", activity);
+                            }}
+                          >
+                            {activity}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
 
                 {[
                   {
-                    id: "budget",
+                    id: "trip_type" as keyof FormData,
+                    label: "Trip Type",
+                    placeholder: "e.g., Low, Medium, High",
+                  },
+                  {
+                    id: "budget" as keyof FormData,
                     label: "Budget",
                     placeholder: "e.g., Low, Medium, High",
                   },
                   {
-                    id: "season",
+                    id: "season" as keyof FormData,
                     label: "Season",
                     placeholder: "e.g., Jun-May, All, Oct-Dec",
                   },
                   {
-                    id: "state",
+                    id: "state" as keyof FormData,
                     label: "State",
                     placeholder: "e.g., California",
                   },
-                  { id: "country", label: "Country", placeholder: "e.g., USA" },
+                  {
+                    id: "country" as keyof FormData,
+                    label: "Country",
+                    placeholder: "e.g., USA",
+                  },
                 ].map(({ id, label, placeholder }) => (
                   <div key={id} className="flex items-center space-x-4">
-                    <label htmlFor={id} className="w-32 text-lg font-medium text-primary">
+                    <label
+                      htmlFor={id}
+                      className="w-32 text-lg font-medium text-primary"
+                    >
                       {label}
                     </label>
                     <input
@@ -448,7 +526,9 @@ export default function TripRecommendation() {
           <div className="w-full lg:w-1/2">
             {recommendations.length > 0 ? (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-primary">Your Recommendations</h2>
+                <h2 className="text-2xl font-bold text-primary">
+                  Your Recommendations
+                </h2>
                 <div className="space-y-4">
                   {recommendations.map((rec, i) => (
                     <div
@@ -463,7 +543,8 @@ export default function TripRecommendation() {
                               src={
                                 imageErrors[rec.Place]
                                   ? "https://images.unsplash.com/photo-1499591934245-40b55745b905?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dHJpcHxlbnwwfHwwfHx8MA%3D%3D"
-                                  : rec.imageUrl || getPlaceholderImage(rec.Place)
+                                  : rec.imageUrl ||
+                                    getPlaceholderImage(rec.Place)
                               }
                               alt={rec.Place}
                               fill
@@ -474,7 +555,9 @@ export default function TripRecommendation() {
                           </div>
                         </div>
                         <div className="w-full md:w-2/3 space-y-2">
-                          <h3 className="text-xl font-bold text-primary">{rec.Place}</h3>
+                          <h3 className="text-xl font-bold text-primary">
+                            {rec.Place}
+                          </h3>
                           <div className="flex flex-wrap gap-2">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/80 text-accent-foreground">
                               {rec.Type}
@@ -488,20 +571,29 @@ export default function TripRecommendation() {
                           </div>
                           {rec.Activities && (
                             <div>
-                              <p className="text-sm text-muted-foreground">Activities: {rec.Activities}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Activities: {rec.Activities}
+                              </p>
                             </div>
                           )}
                           <p className="text-sm">
-                            <span className="font-medium">Location:</span> {rec.State}, {rec.Country}
+                            <span className="font-medium">Location:</span>{" "}
+                            {rec.State}, {rec.Country}
                           </p>
                           <div className="flex items-center mt-2">
-                            <span className="text-sm font-medium mr-2">Rating:</span>
-                              {renderStarRating(rec.Score * 100)}
-                            <span className="text-sm font-medium ml-2">{Math.round(rec.Score * 100)}%</span>
+                            <span className="text-sm font-medium mr-2">
+                              Rating:
+                            </span>
+                            {renderStarRating(rec.Score * 100)}
+                            <span className="text-sm font-medium ml-2">
+                              {Math.round(rec.Score * 100)}%
+                            </span>
                           </div>
                           <div className="absolute bottom-4 right-4">
                             <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rec.Place)}`}
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                rec.Place
+                              )}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition"
@@ -532,10 +624,13 @@ export default function TripRecommendation() {
                   />
                 </svg>
                 <h3 className="text-xl font-medium text-muted-foreground mb-2">
-                  {isLoading ? "Finding perfect trips..." : "Your trip recommendations will appear here"}
+                  {isLoading
+                    ? "Finding perfect trips..."
+                    : "Your trip recommendations will appear here"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Fill out the form and click "Get Recommendations" to discover amazing destinations.
+                  Fill out the form and click "Get Recommendations" to discover
+                  amazing destinations.
                 </p>
               </div>
             )}
@@ -543,15 +638,15 @@ export default function TripRecommendation() {
         </div>
       </div>
     </>
-  )
+  );
 }
 
-const renderStarRating = (percentage) => {
+const renderStarRating = (percentage: number): JSX.Element => {
   const maxStars = 5;
   const starPercentage = (percentage / 100) * maxStars;
   const fullStars = Math.floor(starPercentage);
   const hasHalfStar = starPercentage % 1 >= 0.5;
-  
+
   return (
     <div className="flex items-center">
       {[...Array(maxStars)].map((_, i) => {
