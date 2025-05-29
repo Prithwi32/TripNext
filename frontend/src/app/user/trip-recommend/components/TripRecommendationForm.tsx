@@ -585,9 +585,6 @@ export default function TripRecommendation() {
                               Rating:
                             </span>
                             {renderStarRating(rec.Score * 100)}
-                            <span className="text-sm font-medium ml-2">
-                              {Math.round(rec.Score * 100)}%
-                            </span>
                           </div>
                           <div className="absolute bottom-4 right-4">
                             <a
