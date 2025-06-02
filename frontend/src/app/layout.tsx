@@ -4,16 +4,25 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "react-hot-toast";
 import { Providers } from "@/providers";
+import { Outfit } from "next/font/google";
+import LayoutWrapper from "@/components/layout-wrapper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
 });
 
 export const metadata: Metadata = {
@@ -27,19 +36,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-        <head />
-        <body>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Providers>{children}</Providers>
-          </ThemeProvider>
-          <Toaster/>
-        </body>
-      </html>
+    <html lang="en" suppressHydrationWarning className={outfit.variable}>
+      <head />
+      <body className="font-sans min-h-screen flex flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </Providers>
+        </ThemeProvider>
+        <Toaster />
+      </body>
+    </html>
   );
 }

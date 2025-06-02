@@ -74,6 +74,7 @@ export const NEXT_AUTH: NextAuthOptions = {
         token.email = user.email;
         token.role = user.role;
         token.name = user.name;
+        token.email=  user.email
       }
       return token;
     },

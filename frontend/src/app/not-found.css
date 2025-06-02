@@ -1,0 +1,234 @@
+.route-dot {
+  transform-origin: center;
+  position: relative;
+  z-index: 1;
+}
+
+.route-dot::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  filter: blur(5px);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+.map-marker {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes floatUpDown {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes rotateSlightly {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(1deg);
+  }
+  75% {
+    transform: rotate(-1deg);
+  }
+}
+
+/* Travel line animation for text */
+@keyframes travelLine {
+  0% {
+    width: 0%;
+    left: 0;
+  }
+  50% {
+    width: 100%;
+    left: 0;
+  }
+  50.1% {
+    left: 100%;
+  }
+  100% {
+    width: 100%;
+    left: 0;
+  }
+}
+
+.float-animation {
+  animation: floatUpDown 4s ease-in-out infinite;
+}
+
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.error-text {
+  background: linear-gradient(
+    to right,
+    hsl(var(--primary)),
+    hsl(var(--secondary))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.error-text::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  filter: blur(10px);
+  opacity: 0.5;
+  z-index: -1;
+}
+
+.travel-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.travel-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary)),
+    hsl(var(--secondary))
+  );
+  animation: travelLine 3s infinite;
+  opacity: 1;
+  box-shadow: 0 0 8px 1px hsl(var(--primary) / 0.5);
+}
+
+/* Path animation for the SVG routes */
+@keyframes dashOffset {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animated-path {
+  stroke-dasharray: 10, 10;
+  animation: dashOffset 20s linear infinite;
+}
+
+/* Glowing effect for dots */
+.glow {
+  filter: blur(8px);
+  opacity: 0.6;
+}
+
+/* Travel map background effect */
+.map-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    hsl(var(--muted-foreground) / 0.1) 1px,
+    transparent 0
+  );
+  background-size: 40px 40px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* Error illustration styles */
+.error-illustration {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-12%);
+}
+
+.error-illustration img {
+  transform-origin: center;
+  max-width: none;
+  width: 140%;
+  height: auto;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .error-illustration {
+    transform: translateX(0);
+  }
+
+  .error-illustration img {
+    width: 120% !important;
+  }
+}
+
+/* Media queries for better responsiveness */
+@media (max-width: 640px) {
+  .error-text {
+    font-size: 5rem;
+  }
+
+  /* Adjust spacing on small screens */
+  .map-grid {
+    background-size: 30px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-text {
+    font-size: 4rem;
+  }
+
+  /* Further reduce spacing on very small screens */
+  .map-grid {
+    background-size: 20px 20px;
+  }
+}
