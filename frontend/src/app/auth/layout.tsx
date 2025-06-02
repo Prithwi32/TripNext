@@ -4,7 +4,7 @@ import { NEXT_AUTH } from "@/lib/auth";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(NEXT_AUTH);
-  if (session) {
+  if (session?.user) {
     redirect("/");
   }
   
