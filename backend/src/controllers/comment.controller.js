@@ -1,31 +1,140 @@
-import { asyncHandler } from "../utils/asyncHandler";
-import { ApiError } from "../utils/ApiError";
-import { hash, compare } from "bcryptjs";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
 import { Comment } from "../models/comment.model.js";
 
 // Get all comments (with nested replies) for a blog
 const getAllComments = asyncHandler(async (req, res) => {
-  
+  const { blogId } = req.params;
+
+  if (!blogId) {
+    throw new ApiError(400, "Blog ID is required");
+  }
+
+  // Fetch top-level comments
+  const comments = await Comment.find({ blogId, commentId: null })
+    .populate("userId", "name")
+    .lean();
+
+  // For each top-level comment, fetch its replies
+  const commentsWithReplies = await Promise.all(
+    comments.map(async (comment) => {
+      const replies = await Comment.find({ commentId: comment._id })
+        .populate("userId", "name")
+        .populate("toUserId", "name")
+        .lean();
+      return { ...comment, replies };
+    })
+  );
+
+  res.status(200).json({
+    success: true,
+    data: commentsWithReplies,
+  });
 });
 
 // Add a top-level comment
 const addComment = asyncHandler(async (req, res) => {
-  
+  const { blogId } = req.params;
+  const { message } = req.body;
+  const userId = req.user._id;
+
+  if (!message) {
+    throw new ApiError(400, "Comment message is required");
+  }
+
+  const newComment = await Comment.create({
+    userId,
+    blogId,
+    message,
+  });
+
+  res.status(201).json({
+    success: true,
+    data: newComment,
+  });
 });
 
 // Reply to an existing comment
 const replyToComment = asyncHandler(async (req, res) => {
-  
+  const { blogId, parentCommentId } = req.params;
+  const { message, toUserId } = req.body;
+  const userId = req.user._id;
+
+  if (!message) {
+    throw new ApiError(400, "Reply message is required");
+  }
+
+  const parentComment = await Comment.findById(parentCommentId);
+  if (!parentComment) {
+    throw new ApiError(404, "Parent comment not found");
+  }
+
+  const reply = await Comment.create({
+    userId,
+    blogId,
+    message,
+    commentId: parentCommentId,
+    toUserId: toUserId || parentComment.userId,
+  });
+
+  res.status(201).json({
+    success: true,
+    data: reply,
+  });
 });
 
 // Update a comment or reply
 const updateComment = asyncHandler(async (req, res) => {
-  
+  const { commentId } = req.params;
+  const { message } = req.body;
+  const userId = req.user._id;
+
+  if (!message) {
+    throw new ApiError(400, "Updated message is required");
+  }
+
+  const comment = await Comment.findById(commentId);
+
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (comment.userId.toString() !== userId.toString()) {
+    throw new ApiError(403, "You are not authorized to update this comment");
+  }
+
+  comment.message = message;
+  await comment.save();
+
+  res.status(200).json({
+    success: true,
+    data: comment,
+  });
 });
 
 // Delete a comment or reply
 const deleteComment = asyncHandler(async (req, res) => {
-  
+  const { commentId } = req.params;
+  const userId = req.user._id;
+
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (comment.userId.toString() !== userId.toString()) {
+    throw new ApiError(403, "You are not authorized to delete this comment");
+  }
+
+  // If it's a parent comment, delete its replies too
+  await Comment.deleteMany({
+    $or: [{ _id: commentId }, { commentId }],
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Comment and its replies deleted successfully",
+  });
 });
 
 export {
@@ -33,5 +142,5 @@ export {
   addComment,
   replyToComment,
   updateComment,
-  deleteComment
+  deleteComment,
 };
