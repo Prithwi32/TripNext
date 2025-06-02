@@ -33,6 +33,7 @@ export const isAuthenticated = async (req, res, next) => {
     }
 
     req.user = {
+      _id: decoded._id,
       email: decoded.email,
       role: decoded.role,
     };

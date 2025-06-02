@@ -3,7 +3,7 @@ import { AnimatedIllustration } from "@/components/animated-illustration";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Plane } from "lucide-react";
 
-export default function SignupPage() {
+export default async function SignupPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary/10 to-accent/10 md:flex-row">
       {/* Theme Toggle */}
