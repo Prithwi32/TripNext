@@ -20,7 +20,7 @@ interface FormData {
   trip_type: string;
   budget: string;
   season: string;
-  activities: string;
+  activities: string[];
   state: string;
   country: string;
 }
@@ -34,7 +34,7 @@ export default function TripRecommendation() {
     trip_type: "",
     budget: "",
     season: "",
-    activities: "",
+    activities: [],
     state: "",
     country: "",
   });
@@ -58,15 +58,18 @@ export default function TripRecommendation() {
 
   const [imageCache, setImageCache] = useState<Record<string, string>>({});
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [activityInput, setActivityInput] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    // For all fields except activities
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
-    // Handle suggestions
+    // Handle suggestions for trip_type
     if (name === "trip_type") {
       const tripTypeSuggestions = TRIP_TYPES.filter((type) =>
         type.toLowerCase().includes(value.toLowerCase())
@@ -79,46 +82,52 @@ export default function TripRecommendation() {
         ...prev,
         trip_type: true,
       }));
-    } else if (name === "activities") {
-      const activitySuggestions = ACTIVITIES.filter((activity) =>
-        activity.toLowerCase().includes(value.toLowerCase())
+    }
+  };
+
+  const handleActivityInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setActivityInput(value);
+
+    if (value) {
+      const activitySuggestions = ACTIVITIES.filter(
+        (activity) =>
+          activity.toLowerCase().includes(value.toLowerCase()) &&
+          !formData.activities.includes(activity)
       );
-      setSuggestions((prev) => ({
-        ...prev,
-        activities: activitySuggestions,
-      }));
-      setShowSuggestions((prev) => ({
-        ...prev,
-        activities: true,
-      }));
+      setSuggestions((prev) => ({ ...prev, activities: activitySuggestions }));
+      setShowSuggestions((prev) => ({ ...prev, activities: true }));
+    } else {
+      setShowSuggestions((prev) => ({ ...prev, activities: false }));
     }
   };
 
   const handleSuggestionClick = (field: string, value: string) => {
     if (field === "activities") {
-      const currentActivities = formData.activities
-        .split(",")
-        .map((a) => a.trim())
-        .filter((a) => a);
-
-      if (!currentActivities.includes(value)) {
-        const newActivities = [...currentActivities, value].join(", ");
+      if (!formData.activities.includes(value)) {
         setFormData((prev) => ({
           ...prev,
-          activities: newActivities,
+          activities: [...prev.activities, value],
         }));
+        setActivityInput("");
       }
+      setShowSuggestions((prev) => ({
+        ...prev,
+        activities: false,
+      }));
     } else {
       // For other fields, replace the value
       setFormData((prev) => ({
         ...prev,
         [field]: value,
       }));
+      setShowSuggestions((prev) => ({
+        ...prev,
+        [field]: false,
+      }));
     }
-    setShowSuggestions((prev) => ({
-      ...prev,
-      [field]: false,
-    }));
   };
 
   useEffect(() => {
@@ -215,19 +224,6 @@ export default function TripRecommendation() {
       activities: formData.activities,
     };
 
-    // Convert activities to array if there's input
-    if (
-      typeof submissionData.activities === "string" &&
-      submissionData.activities.trim()
-    ) {
-      submissionData.activities = submissionData.activities
-        .split(",")
-        .map((item: string) => item.trim())
-        .filter((item: string) => item.length > 0);
-    } else {
-      submissionData.activities = [];
-    }
-
     if (!validateInput(formData)) {
       setIsLoading(false);
       return;
@@ -294,6 +290,11 @@ export default function TripRecommendation() {
         },
       });
     } finally {
+      setFormData((prev) => ({
+        ...prev,
+        activities: [],
+      }));
+      setActivityInput("");
       setIsLoading(false);
     }
   };
@@ -391,7 +392,7 @@ export default function TripRecommendation() {
             <form
               id="tripForm"
               onSubmit={handleSubmit}
-              className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg space-y-6"
+              className="max-w-lg mx-auto bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg space-y-6"
             >
               <div className="space-y-4">
                 {/* Trip Type Field */}
@@ -408,7 +409,7 @@ export default function TripRecommendation() {
                     name="trip_type"
                     value={formData.trip_type}
                     onChange={handleChange}
-                    className="flex-1 p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 p-3 text-black dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter trip type..."
                   />
                   {showSuggestions.trip_type &&
@@ -431,47 +432,68 @@ export default function TripRecommendation() {
                 </div>
 
                 {/* Activities Field */}
-                <div className="flex items-center space-x-4 relative">
-                  <label
-                    htmlFor="activities"
-                    className="w-32 text-lg font-medium text-primary"
-                  >
+                <div className="flex items-start space-x-4">
+                  <label className="w-32 text-lg font-medium text-primary pt-3">
                     Activities
                   </label>
-                  <input
-                    type="text"
-                    id="activities"
-                    name="activities"
-                    value={formData.activities}
-                    onChange={handleChange}
-                    className="flex-1 p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter activities..."
-                  />
-                  {showSuggestions.activities &&
-                    suggestions.activities.length > 0 && (
-                      <div className="suggestions-container">
-                        {suggestions.activities.map((activity, index) => (
-                          <div
-                            key={index}
-                            className="suggestion-item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSuggestionClick("activities", activity);
+                  <div className="flex-1 space-y-2">
+                    {/* Selected activities chips */}
+                    <div className="flex flex-wrap gap-2">
+                      {formData.activities.map((activity) => (
+                        <div
+                          key={activity}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center"
+                        >
+                          {activity}
+                          <button
+                            type="button"
+                            className="ml-2 text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                activities: prev.activities.filter(
+                                  (a) => a !== activity
+                                ),
+                              }));
                             }}
                           >
-                            {activity}
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Activity input with suggestions */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={activityInput}
+                        onChange={handleActivityInputChange}
+                        placeholder="Type activity and select from suggestions"
+                        className="w-full p-3 text-black dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      {showSuggestions.activities &&
+                        suggestions.activities.length > 0 && (
+                          <div className="suggestions-container">
+                            {suggestions.activities.map((activity, index) => (
+                              <div
+                                key={index}
+                                className="suggestion-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSuggestionClick("activities", activity);
+                                }}
+                              >
+                                {activity}
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        )}
+                    </div>
+                  </div>
                 </div>
 
                 {[
-                  {
-                    id: "trip_type" as keyof FormData,
-                    label: "Trip Type",
-                    placeholder: "e.g., Low, Medium, High",
-                  },
                   {
                     id: "budget" as keyof FormData,
                     label: "Budget",
@@ -507,7 +529,7 @@ export default function TripRecommendation() {
                       value={formData[id]}
                       onChange={handleChange}
                       placeholder={placeholder}
-                      className="flex-1 p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="flex-1 p-3 text-black dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 ))}
