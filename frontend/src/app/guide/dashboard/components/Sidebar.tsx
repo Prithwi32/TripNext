@@ -43,21 +43,7 @@ export function AppSidebar({
   setActiveSection,
 }: AppSidebarProps) {
   return (
-    <Sidebar className="bg-background text-foreground border-r border-muted">
-      <SidebarHeader>
-        <div className="flex items-center gap-3 px-2 py-4">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src="/placeholder.svg?height=40&width=40" />
-            <AvatarFallback>GD</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">Dashboard</span>
-            <span className="text-xs text-muted-foreground">
-              TripNext Guide Portal
-            </span>
-          </div>
-        </div>
-      </SidebarHeader>
+    <Sidebar className="bg-background text-foreground border-r border-muted mt-20">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
