@@ -92,7 +92,7 @@ function DesktopNavbar() {
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={user.image || ""}
+                    src=""
                     alt={user.name || "User"}
                   />
                   <AvatarFallback className="bg-primary text-primary-foreground">
