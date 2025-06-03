@@ -18,12 +18,36 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "@/lib/axios";
 import { useSession } from "next-auth/react";
 
+interface ProfileData {
+  guideName: string;
+  guideEmail: string;
+  contactNumber: string;
+  description: string;
+  profileImage: string | File;
+  totalPackages: number;
+  joinDate: string;
+  createdAt?: string;
+}
+interface EditData {
+  guideName?: string;
+  contactNumber?: string;
+  description?: string;
+  profileImage?: string | File;
+}
+
+interface Errors {
+  guideName: string;
+  contactNumber: string;
+  description: string;
+  profileImage: string;
+}
+
 export function ProfileSection() {
   const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(null);
-  const [editData, setEditData] = useState(null);
-  const [errors, setErrors] = useState({
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [editData, setEditData] = useState<Partial<EditData> | null>(null);
+  const [errors, setErrors] = useState<Errors>({
     guideName: "",
     contactNumber: "",
     description: "",
@@ -42,14 +66,17 @@ export function ProfileSection() {
         const guideInfo = res.data.data.guide;
         const totalPackages = res.data.data.package?.length || 0;
 
-        setProfileData({
+        const profile: ProfileData = {
           ...guideInfo,
           totalPackages,
           joinDate:
             guideInfo.createdAt ||
             guideInfo.joinDate ||
             new Date().toISOString(),
-        });
+          profileImage: guideInfo.profileImage || "",
+        };
+
+        setProfileData(profile);
         setEditData({ ...guideInfo });
       } catch (error) {
         toast.error("Failed to fetch profile");
@@ -59,7 +86,7 @@ export function ProfileSection() {
     fetchProfile();
   }, [status, userId]);
 
-  const validatePhoneNumber = (phone) => {
+  const validatePhoneNumber = (phone: string) => {
     if (!phone) return { isValid: true, message: "" };
 
     const normalized = phone.trim();
@@ -104,8 +131,19 @@ export function ProfileSection() {
     };
   };
 
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const validateInputs = () => {
-    const newErrors = {
+    if (!editData) return false;
+
+    const newErrors: Errors = {
       guideName: "",
       contactNumber: "",
       description: "",
@@ -124,7 +162,7 @@ export function ProfileSection() {
     }
 
     // Validate contact number
-    const phoneValidation = validatePhoneNumber(editData.contactNumber);
+    const phoneValidation = validatePhoneNumber(editData.contactNumber || "");
     if (!phoneValidation.isValid) {
       newErrors.contactNumber = phoneValidation.message;
       isValid = false;
@@ -163,17 +201,8 @@ export function ProfileSection() {
     return isValid;
   };
 
-  const isValidUrl = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.match("image.*")) {
@@ -198,7 +227,10 @@ export function ProfileSection() {
         },
       });
 
-      setEditData((prev) => ({ ...prev, profileImage: res.data.url }));
+      setEditData((prev) => ({
+        ...prev,
+        profileImage: res.data.url,
+      }));
       setErrors({ ...errors, profileImage: "" });
     } catch (error) {
       toast.error("Failed to upload image");
@@ -210,7 +242,14 @@ export function ProfileSection() {
   const handleEdit = () => setIsEditing(true);
 
   const handleCancel = () => {
-    setEditData(profileData);
+    if (profileData) {
+      setEditData({
+        guideName: profileData.guideName,
+        contactNumber: profileData.contactNumber,
+        description: profileData.description,
+        profileImage: profileData.profileImage,
+      });
+    }
     setErrors({
       guideName: "",
       contactNumber: "",
@@ -220,36 +259,39 @@ export function ProfileSection() {
     setIsEditing(false);
   };
 
-  const handleSave = async () => {
-    if (!validateInputs()) {
-      toast.error("Please fix the errors before saving");
-      return;
-    }
+const handleSave = async () => {
+  if (!validateInputs() || !editData || !profileData) {
+    toast.error("Please fix the errors before saving");
+    return;
+  }
 
-    try {
-      const updateData = {
-        guideName: editData.guideName,
-        contactNumber: editData.contactNumber,
-        description: editData.description,
-        profileImage: editData.profileImage,
-      };
+  try {
+    const updateData = {
+      guideName: editData.guideName || profileData.guideName,
+      contactNumber: editData.contactNumber || profileData.contactNumber,
+      description: editData.description || profileData.description,
+      profileImage: editData.profileImage || profileData.profileImage,
+    };
 
-      await axiosInstance.patch("/api/guide/update", updateData);
+    await axiosInstance.patch("/api/guide/update", updateData);
 
-      setProfileData((prev) => ({
+    setProfileData((prev) => {
+      if (!prev) return null;
+      return {
         ...prev,
-        ...updateData,
-        joinDate: prev.joinDate,
-        totalPackages: prev.totalPackages,
-      }));
+        guideName: editData.guideName || prev.guideName,
+        contactNumber: editData.contactNumber || prev.contactNumber,
+        description: editData.description || prev.description,
+        profileImage: editData.profileImage || prev.profileImage,
+      };
+    });
 
-      console.log(updateData);
-      setIsEditing(false);
-      toast.success("Profile Updated!");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update profile");
-    }
-  };
+    setIsEditing(false);
+    toast.success("Profile Updated!");
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to update profile");
+  }
+};
 
   if (status === "loading" || !profileData) return <p>Loading...</p>;
   if (!userId) return <p>User not logged in</p>;
@@ -282,7 +324,7 @@ export function ProfileSection() {
               <Avatar className="h-20 w-20">
                 <AvatarImage
                   src={
-                    typeof editData.profileImage === "string"
+                    typeof editData?.profileImage === "string"
                       ? editData.profileImage
                       : "/travel1.avif"
                   }
@@ -302,7 +344,7 @@ export function ProfileSection() {
                       type="url"
                       placeholder="Image URL"
                       value={
-                        typeof editData.profileImage === "string"
+                        typeof editData?.profileImage === "string"
                           ? editData.profileImage
                           : ""
                       }
@@ -315,10 +357,7 @@ export function ProfileSection() {
                     />
                     <span className="text-muted-foreground">or</span>
                   </div>
-                  <Label
-                    htmlFor="profileImageUpload"
-                    className="cursor-pointer"
-                  >
+                  <Label htmlFor="profileImageUpload" className="cursor-pointer">
                     <div className="flex items-center gap-2 p-2 border rounded-md hover:bg-muted">
                       <Upload className="h-4 w-4" />
                       <span>Upload Image</span>
@@ -347,7 +386,7 @@ export function ProfileSection() {
                   <div className="space-y-1">
                     <Input
                       id="guideName"
-                      value={editData.guideName}
+                      value={editData?.guideName || ""}
                       onChange={(e) =>
                         setEditData({ ...editData, guideName: e.target.value })
                       }
@@ -378,7 +417,7 @@ export function ProfileSection() {
                   <div className="space-y-1">
                     <Input
                       id="contactNumber"
-                      value={editData.contactNumber}
+                      value={editData?.contactNumber || ""}
                       onChange={(e) =>
                         setEditData({
                           ...editData,
@@ -409,7 +448,7 @@ export function ProfileSection() {
                 <div className="space-y-1">
                   <Textarea
                     id="description"
-                    value={editData.description}
+                    value={editData?.description || ""}
                     onChange={(e) =>
                       setEditData({ ...editData, description: e.target.value })
                     }
@@ -424,7 +463,7 @@ export function ProfileSection() {
                       </p>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      {editData.description?.length || 0}/500
+                      {editData?.description?.length || 0}/500
                     </p>
                   </div>
                 </div>
