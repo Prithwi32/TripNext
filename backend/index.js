@@ -9,6 +9,7 @@ import guideRouter from "./src/routes/guide.routes.js";
 import tripRouter from "./src/routes/trip.routes.js";
 import packageRouter from "./src/routes/package.routes.js";
 import commentRouter from "./src/routes/comment.routes.js";
+import chatRouter from "./src/routes/chat.routes.js";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use("/api/guide", guideRouter);
 app.use("/api/trip", tripRouter);
 app.use("/api/package", packageRouter);
 app.use("/api/comment", commentRouter);
+app.use("/api/chat", chatRouter);
 
 
 // global catch
