@@ -226,7 +226,7 @@ export function AddPackageSection() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cost">Package Cost (USD)</Label>
+                  <Label htmlFor="cost">Package Cost (INR)</Label>
                   <Input
                     id="cost"
                     type="number"

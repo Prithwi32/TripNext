@@ -32,14 +32,14 @@ function DesktopNavbar() {
 
   // Get profile route
   const getProfileRoute = () => {
-    if (!user) return "/profile";
-    return `/profile/${
-      user.name
-        ? user.name.replace(/\s+/g, "").toLowerCase()
-        : user.email
-        ? user.email.split("@")[0]
-        : "me"
-    }`;
+    if (!user) return "/auth/login";
+
+    if(user.role === "guide"){
+      return "/guide/dashboard"
+    }else if(user.role === "user"){
+      return "/user/dashboard"
+    }
+    return "auth/login"
   };
 
   return (
@@ -119,7 +119,7 @@ function DesktopNavbar() {
                   className="flex items-center gap-2 cursor-pointer hover:bg-secondary focus:bg-secondary w-full px-2 py-1.5 rounded-sm"
                 >
                   <UserIcon className="h-4 w-4" />
-                  <span>Profile</span>
+                  <span>Dashboard</span>
                 </Link>
               </DropdownMenuItem>
 

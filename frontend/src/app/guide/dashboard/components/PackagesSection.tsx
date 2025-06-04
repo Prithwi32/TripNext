@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Edit, Trash2, Eye, Search, MapPin, Calendar, DollarSign } from "lucide-react"
+import { Edit, Trash2, Eye, Search, MapPin, Calendar, IndianRupee} from "lucide-react"
 import { PackageDetailsModal } from "./PackageDetailsPage"
 import { EditPackageModal } from "./EditPackagePopUp"
 import toast from "react-hot-toast";
+import { axiosInstance } from "@/lib/axios"
+import { useSession } from "next-auth/react"
 
 interface Package {
   _id: string
@@ -21,41 +23,26 @@ interface Package {
 }
 
 export function PackagesSection() {
-  const [packages, setPackages] = useState<Package[]>([
-    {
-      _id: "1",
-      locations: ["Paris", "Rome", "Barcelona"],
-      packageDescription: "Explore the beautiful cities of Europe with our comprehensive 10-day tour package.",
-      cost: 2500,
-      tripDays: 10,
-      images: ["/placeholder.svg?height=200&width=300"],
-      createdAt: "2024-01-15",
-    },
-    {
-      _id: "2",
-      locations: ["Tokyo", "Kyoto", "Osaka"],
-      packageDescription: "Discover the wonders of Japan with traditional culture and modern attractions.",
-      cost: 3200,
-      tripDays: 14,
-      images: ["/placeholder.svg?height=200&width=300"],
-      createdAt: "2024-02-20",
-    },
-    {
-      _id: "3",
-      locations: ["Bali", "Jakarta"],
-      packageDescription: "Tropical paradise adventure with beautiful beaches and cultural experiences.",
-      cost: 1800,
-      tripDays: 7,
-      images: ["/placeholder.svg?height=200&width=300"],
-      createdAt: "2024-03-10",
-    },
-  ])
-
+  const { data: session, status } = useSession();
+  const [packages, setPackages] = useState<Package[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [editingPackage, setEditingPackage] = useState<Package | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+
+  const userId = session?.user?.id;
+  useEffect( () => {
+    const fetchPackages = async () => {
+      try{
+        const res = await  axiosInstance.get(`/api/guide/${userId}/packages`)
+        setPackages(res.data.data)
+      }catch (error){
+        toast.error("Failed to fetch packages!")
+      }
+    }
+    fetchPackages()
+  }, [])
 
   const filteredPackages = packages.filter(
     (pkg) =>
@@ -75,7 +62,7 @@ export function PackagesSection() {
 
   const handleDelete = async (packageId: string) => {
     try {
-      // API call to delete package
+      await axiosInstance.delete(`/api/package/delete/${packageId}`);
       setPackages(packages.filter((pkg) => pkg._id !== packageId))
       toast(`Package has been successfully deleted.`)
     } catch (error) {
@@ -125,7 +112,7 @@ export function PackagesSection() {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <CardTitle className="text-lg line-clamp-1">{pkg.locations.join(", ")}</CardTitle>
-                <div className="text-lg font-bold text-primary">${pkg.cost}</div>
+                <div className="text-lg font-bold text-primary">₹{pkg.cost}</div>
               </div>
               <CardDescription className="line-clamp-2">{pkg.packageDescription}</CardDescription>
             </CardHeader>
@@ -140,8 +127,8 @@ export function PackagesSection() {
                   <span>{pkg.tripDays} days</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span>${pkg.cost}</span>
+                  <IndianRupee className="h-4 w-4" />
+                  <span>{pkg.cost}</span>
                 </div>
               </div>
               <div className="flex gap-2">
