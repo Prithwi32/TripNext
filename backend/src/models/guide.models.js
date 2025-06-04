@@ -18,6 +18,10 @@ const guideSchema = new Schema(
       type: String,
       required: true,
     },
+    profileImage: {
+      type: String,
+      default: "",
+    },
     contactNumber: {
       type: String,
       required: true,

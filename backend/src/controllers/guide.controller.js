@@ -102,6 +102,7 @@ const loginGuide = asyncHandler(async (req, res) => {
   res.status(200).json({
     message: "Login successful",
     user: {
+      id: guide._id,
       name: guide.guideName,
       email: guide.guideEmail,
       role: "guide",
@@ -157,39 +158,50 @@ const getAllGuides = asyncHandler(async (req, res) => {
 
 //get all the details of a single guide
 const getGuideDetails = asyncHandler(async (req, res) => {
-  const { _id } = req.query;
-  // console.log(_id);
-  const guideDetails = await Guide.findById(_id, "-password -otp -otpExpiry -__v");
-  const packageDetails = await Package.findMany({guide: _id});
-  // console.log(guideDetails);
+  const { id } = req.params;
+  const guideDetails = await Guide.findById(id, "-password -otp -otpExpiry -__v");
+  const packageDetails = await Package.find({ guide: id });
+  
   if (!guideDetails) {
     throw new ApiError(404, "No user found");
   }
 
   res.status(200).json({
     message: "Fetched Guide details successfully!",
-    data: {guide: guideDetails, package: packageDetails },
+    data: { guide: guideDetails, package: packageDetails },
   });
 });
 
-//update description, contact Number and guideName (one or all)
+// update guide profile
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const accountDetails = req.body;
   const guideEmail = req.user.email;
+
   const details = await Guide.findOne({ guideEmail: guideEmail });
-  if (!accountDetails.contactNumber || !accountDetails.description) {
-    throw new ApiError(400, "All fields are required");
+
+  if (!details) {
+    throw new ApiError(404, "Guide not found");
   }
-  const updatedDetails = await Guide.findByIdAndUpdate(
-    details?._id,
-    accountDetails,
-    {
-      new: true,
+
+  const allowedFields = ["guideName", "contactNumber", "description", "profileImage"];
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (accountDetails[field] !== undefined) {
+      updates[field] = accountDetails[field];
     }
-  );
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new ApiError(400, "At least one valid field is required to update");
+  }
+
+  const updatedDetails = await Guide.findByIdAndUpdate(details._id, updates, { new: true });
+
   res.status(200).json({
     success: true,
-    message: "Guide details updated successfully successfully",
+    message: "Guide details updated successfully",
+    data: updatedDetails,
   });
 });
 
