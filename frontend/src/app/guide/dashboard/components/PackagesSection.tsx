@@ -62,7 +62,7 @@ export function PackagesSection() {
 
   const handleDelete = async (packageId: string) => {
     try {
-      // API call to delete package
+      await axiosInstance.delete(`/api/package/delete/${packageId}`);
       setPackages(packages.filter((pkg) => pkg._id !== packageId))
       toast(`Package has been successfully deleted.`)
     } catch (error) {

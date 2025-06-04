@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, X, Save } from "lucide-react"
 import { toast } from "react-hot-toast"
+import { axiosInstance } from "@/lib/axios"
 
 interface Package {
   _id: string
@@ -91,13 +92,12 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
         tripDays: Number(formData.tripDays),
       }
 
-      // API call would go here
-      // await updatePackage(pkg._id, updatedPackage)
+      await axiosInstance.patch(`/api/package/update/${pkg._id}`, updatedPackage)
 
       onUpdate(updatedPackage)
-      toast(`Package Updated, Your travel package has been successfully updated.`)
+      toast.success(`Your travel package updated successfully.`)
     } catch (error) {
-      toast(`Failed to update package. Please try again.`)
+      toast.error(`Failed to update package. Please try again.`)
     } finally {
       setIsSubmitting(false)
     }
