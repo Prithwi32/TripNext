@@ -153,7 +153,7 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="edit-cost">Cost (USD)</Label>
+                <Label htmlFor="edit-cost">Cost (INR)</Label>
                 <Input
                   id="edit-cost"
                   type="number"
