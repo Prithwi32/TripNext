@@ -1,42 +1,55 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, X, Save } from "lucide-react"
-import { toast } from "react-hot-toast"
-import { axiosInstance } from "@/lib/axios"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, X, Save, Upload } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { axiosInstance } from "@/lib/axios";
 
 interface Package {
-  _id: string
-  locations: string[]
-  packageDescription: string
-  cost: number
-  tripDays: number
-  images: string[]
-  createdAt: string
+  _id: string;
+  locations: string[];
+  packageDescription: string;
+  cost: number;
+  tripDays: number;
+  images: string[];
+  createdAt: string;
 }
 
 interface EditPackageModalProps {
-  package: Package | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onUpdate: (updatedPackage: Package) => void
+  package: Package | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate: (updatedPackage: Package) => void;
 }
 
-export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }: EditPackageModalProps) {
+export function EditPackageModal({
+  package: pkg,
+  open,
+  onOpenChange,
+  onUpdate,
+}: EditPackageModalProps) {
   const [formData, setFormData] = useState({
     locations: [""],
     packageDescription: "",
     cost: "",
     tripDays: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (pkg) {
@@ -45,72 +58,160 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
         packageDescription: pkg.packageDescription,
         cost: pkg.cost.toString(),
         tripDays: pkg.tripDays.toString(),
-      })
+      });
+      setExistingImages(pkg.images || []);
+      setNewImages([]);
     }
-  }, [pkg])
+  }, [pkg]);
 
   const addLocation = () => {
     setFormData({
       ...formData,
       locations: [...formData.locations, ""],
-    })
-  }
+    });
+  };
 
   const removeLocation = (index: number) => {
     setFormData({
       ...formData,
       locations: formData.locations.filter((_, i) => i !== index),
-    })
-  }
+    });
+  };
 
   const updateLocation = (index: number, value: string) => {
-    const newLocations = [...formData.locations]
-    newLocations[index] = value
+    const newLocations = [...formData.locations];
+    newLocations[index] = value;
     setFormData({
       ...formData,
       locations: newLocations,
-    })
-  }
+    });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const totalImages = existingImages.length + newImages.length + files.length;
+
+    if (totalImages > 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+
+    setNewImages([...newImages, ...files]);
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImages(newImages.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages(existingImages.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!pkg) return
+    e.preventDefault();
+    if (!pkg) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      const validLocations = formData.locations.filter((loc) => loc.trim() !== "")
+      // Validate form data
+      const validLocations = formData.locations.filter(
+        (loc) => loc.trim() !== ""
+      );
       if (validLocations.length === 0) {
-        throw new Error("At least one location is required")
+        throw new Error("At least one location is required");
       }
 
-      const updatedPackage: Package = {
-        ...pkg,
-        locations: validLocations,
-        packageDescription: formData.packageDescription,
-        cost: Number(formData.cost),
-        tripDays: Number(formData.tripDays),
+      if (!formData.packageDescription.trim()) {
+        throw new Error("Package description is required");
       }
 
-      await axiosInstance.patch(`/api/package/update/${pkg._id}`, updatedPackage)
+      if (
+        !formData.cost ||
+        isNaN(Number(formData.cost)) ||
+        Number(formData.cost) < 0
+      ) {
+        throw new Error("Valid cost is required");
+      }
 
-      onUpdate(updatedPackage)
-      toast.success(`Your travel package updated successfully.`)
-    } catch (error) {
-      toast.error(`Failed to update package. Please try again.`)
+      if (
+        !formData.tripDays ||
+        isNaN(Number(formData.tripDays)) ||
+        Number(formData.tripDays) < 1
+      ) {
+        throw new Error("Valid trip duration is required");
+      }
+
+      const totalImages = existingImages.length + newImages.length;
+      if (totalImages === 0) {
+        throw new Error("At least one image is required");
+      }
+      if (totalImages > 5) {
+        throw new Error("Maximum 5 images allowed");
+      }
+
+      // Always use FormData to maintain consistency with the create package approach
+      const formDataToSend = new FormData();
+
+      // Add the locations as a JSON string
+      formDataToSend.append("locations", JSON.stringify(validLocations));
+
+      // Add other fields
+      formDataToSend.append(
+        "packageDescription",
+        formData.packageDescription.trim()
+      );
+      formDataToSend.append("cost", formData.cost.toString());
+      formDataToSend.append("tripDays", formData.tripDays.toString());
+
+      // Add existing images if any
+      if (existingImages.length > 0) {
+        formDataToSend.append("existingImages", JSON.stringify(existingImages));
+      }
+
+      // Add new images if any
+      newImages.forEach((image) => {
+        formDataToSend.append("packageImages", image);
+      });
+
+      const response = await axiosInstance.patch(
+        `/api/package/update/${pkg._id}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const updatedPackage = response.data.data;
+      onUpdate(updatedPackage);
+      toast.success("Package updated successfully");
+      onOpenChange(false);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update package";
+      toast.error(errorMessage);
+      console.error("Update error:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  if (!pkg) return null
+  if (!pkg) return null;
+
+  const totalImages = existingImages.length + newImages.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Package</DialogTitle>
-          <DialogDescription>Update your travel package details</DialogDescription>
+          <DialogDescription>
+            Update your travel package details
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,13 +228,23 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
                       className="flex-1"
                     />
                     {formData.locations.length > 1 && (
-                      <Button type="button" variant="outline" size="icon" onClick={() => removeLocation(index)}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeLocation(index)}
+                      >
                         <X className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
                 ))}
-                <Button type="button" variant="outline" onClick={addLocation} className="w-full gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addLocation}
+                  className="w-full gap-2"
+                >
                   <Plus className="h-4 w-4" />
                   Add Location
                 </Button>
@@ -145,7 +256,12 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
               <Textarea
                 id="edit-description"
                 value={formData.packageDescription}
-                onChange={(e) => setFormData({ ...formData, packageDescription: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    packageDescription: e.target.value,
+                  })
+                }
                 rows={4}
                 className="resize-none"
               />
@@ -158,7 +274,9 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
                   id="edit-cost"
                   type="number"
                   value={formData.cost}
-                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cost: e.target.value })
+                  }
                   min="0"
                   step="0.01"
                 />
@@ -169,24 +287,103 @@ export function EditPackageModal({ package: pkg, open, onOpenChange, onUpdate }:
                   id="edit-days"
                   type="number"
                   value={formData.tripDays}
-                  onChange={(e) => setFormData({ ...formData, tripDays: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tripDays: e.target.value })
+                  }
                   min="1"
                 />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Package Images</Label>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Existing Images */}
+                {existingImages.map((imageUrl, index) => (
+                  <div key={`existing-${index}`} className="relative group">
+                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                      <img
+                        src={imageUrl}
+                        alt={`Package image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeExistingImage(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* New Images */}
+                {newImages.map((image, index) => (
+                  <div key={`new-${index}`} className="relative group">
+                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt={`New package image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeNewImage(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* Upload Button */}
+                {totalImages < 5 && (
+                  <label className="aspect-video border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                    <div className="text-center">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Upload Image
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={isSubmitting} className="flex-1 gap-2">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 gap-2"
+            >
               <Save className="h-4 w-4" />
               {isSubmitting ? "Updating..." : "Update Package"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1"
+            >
               Cancel
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -83,16 +83,11 @@ function MobileNavbar() {
                   asChild
                 >
                   <Link
-                    href={`/profile/${
-                      user.name
-                        ? user.name.replace(/\s+/g, "").toLowerCase()
-                        : user.email
-                        ? user.email.split("@")
-                        : "me"
-                    }`}
+                    href={`/${
+                      user.role}/dashboard`}
                   >
                     <UserIcon className="w-4 h-4" />
-                    Profile
+                    Dashboard
                   </Link>
                 </Button>
                 <Button
