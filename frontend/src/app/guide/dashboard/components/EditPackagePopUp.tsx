@@ -114,6 +114,7 @@ export function EditPackageModal({
     setIsSubmitting(true);
 
     try {
+      // Validate form data
       const validLocations = formData.locations.filter(
         (loc) => loc.trim() !== ""
       );
@@ -141,109 +142,59 @@ export function EditPackageModal({
         throw new Error("Valid trip duration is required");
       }
 
-      // If we have new images, use FormData
-      if (newImages.length > 0) {
-        const formDataToSend = new FormData();
-
-        // Ensure locations is properly formatted and non-empty
-        const validLocationsString = JSON.stringify(validLocations);
-        console.log("Sending locations:", validLocationsString);
-        formDataToSend.append("locations", validLocationsString);
-
-        // Add other fields
-        formDataToSend.append(
-          "packageDescription",
-          formData.packageDescription.trim()
-        );
-        formDataToSend.append("cost", formData.cost.toString());
-        formDataToSend.append("tripDays", formData.tripDays.toString());
-
-        // Add existing images if any
-        if (existingImages.length > 0) {
-          const existingImagesString = JSON.stringify(existingImages);
-          console.log("Sending existing images:", existingImagesString);
-          formDataToSend.append("existingImages", existingImagesString);
-        }
-
-        // Add new images
-        newImages.forEach((image) => {
-          formDataToSend.append("packageImages", image);
-        });
-
-        // Log the complete form data for debugging
-        console.log("Form data entries:");
-        for (const pair of formDataToSend.entries()) {
-          console.log(pair[0], pair[1]);
-        }
-
-        try {
-          const response = await axiosInstance.patch(
-            `/api/package/update/${pkg._id}`,
-            formDataToSend,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-
-          const updatedPackage = response.data.data;
-          onUpdate(updatedPackage);
-          toast.success("Your travel package updated successfully");
-          onOpenChange(false);
-        } catch (error: any) {
-          console.error("Error uploading:", error);
-          const errorMessage =
-            error.response?.data?.message ||
-            error.message ||
-            "Failed to update package";
-          toast.error(errorMessage);
-          throw error;
-        }
-      } else {
-        // If no new images, send as JSON
-        const jsonData = {
-          locations: validLocations,
-          packageDescription: formData.packageDescription.trim(),
-          cost: Number(formData.cost),
-          tripDays: Number(formData.tripDays),
-          existingImages,
-        };
-
-        console.log("Sending JSON data:", jsonData);
-
-        try {
-          const response = await axiosInstance.patch(
-            `/api/package/update/${pkg._id}`,
-            jsonData,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          const updatedPackage = response.data.data;
-          onUpdate(updatedPackage);
-          toast.success("Your travel package updated successfully");
-          onOpenChange(false);
-        } catch (error: any) {
-          console.error("Error updating:", error);
-          const errorMessage =
-            error.response?.data?.message ||
-            error.message ||
-            "Failed to update package";
-          toast.error(errorMessage);
-          throw error;
-        }
+      const totalImages = existingImages.length + newImages.length;
+      if (totalImages === 0) {
+        throw new Error("At least one image is required");
       }
+      if (totalImages > 5) {
+        throw new Error("Maximum 5 images allowed");
+      }
+
+      // Always use FormData to maintain consistency with the create package approach
+      const formDataToSend = new FormData();
+
+      // Add the locations as a JSON string
+      formDataToSend.append("locations", JSON.stringify(validLocations));
+
+      // Add other fields
+      formDataToSend.append(
+        "packageDescription",
+        formData.packageDescription.trim()
+      );
+      formDataToSend.append("cost", formData.cost.toString());
+      formDataToSend.append("tripDays", formData.tripDays.toString());
+
+      // Add existing images if any
+      if (existingImages.length > 0) {
+        formDataToSend.append("existingImages", JSON.stringify(existingImages));
+      }
+
+      // Add new images if any
+      newImages.forEach((image) => {
+        formDataToSend.append("packageImages", image);
+      });
+
+      const response = await axiosInstance.patch(
+        `/api/package/update/${pkg._id}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const updatedPackage = response.data.data;
+      onUpdate(updatedPackage);
+      toast.success("Package updated successfully");
+      onOpenChange(false);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Failed to update package";
       toast.error(errorMessage);
-      console.error("Update error:", error.response?.data || error);
+      console.error("Update error:", error);
     } finally {
       setIsSubmitting(false);
     }

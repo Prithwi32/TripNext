@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, MapPin, Calendar, DollarSign } from "lucide-react";
+import { Plus, X, Upload, MapPin, Calendar, IndianRupee } from "lucide-react";
 import toast from "react-hot-toast";
 import { axiosInstance } from "@/lib/axios";
 import { useSession } from "next-auth/react";
@@ -279,7 +279,7 @@ export function AddPackageSection() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
+                  <IndianRupee className="h-5 w-5" />
                   Pricing & Duration
                 </CardTitle>
               </CardHeader>
@@ -337,7 +337,7 @@ export function AddPackageSection() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Cost:</span>
-                  <span>${formData.cost || "0"}</span>
+                  <span>₹{formData.cost || "0"}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Images:</span>
