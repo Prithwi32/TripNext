@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Package, Plus, LogOut } from "lucide-react";
+import { User, Package, Plus } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -52,7 +52,7 @@ export function AppSidebar({
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    className={`hover:bg-accent/50 hover:text-accent-foreground`}
+                    className={`hover:bg-secondary hover:text-secondary-foreground`}
                     onClick={() => setActiveSection(item.id)}
                     isActive={activeSection === item.id}
                   >
@@ -65,12 +65,6 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center gap-2 px-2 py-4 text-xs text-foreground/70">
-          <LogOut className="h-4 w-4" />
-          <span>Logout</span>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }

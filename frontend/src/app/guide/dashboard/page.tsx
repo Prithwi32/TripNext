@@ -48,6 +48,7 @@ export default function GuideDashboard() {
   }
 
   return (
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
     <SidebarProvider>
       <AppSidebar activeSection={activeSection} setActiveSection={setActiveSection} />
       <SidebarInset>
@@ -71,5 +72,6 @@ export default function GuideDashboard() {
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{renderContent()}</div>
       </SidebarInset>
     </SidebarProvider>
+    </div>
   )
 }

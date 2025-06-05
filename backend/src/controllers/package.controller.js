@@ -65,13 +65,7 @@ const getPackageById = asyncHandler(async (req, res) => {
 
 // Create a package for a particular guide
 const createPackage = asyncHandler(async (req, res) => {
-  let {
-    locations,
-    packageDescription = "",
-    cost,
-    guide,
-    tripDays,
-  } = req.body;
+  let { locations, packageDescription = "", cost, guide, tripDays } = req.body;
   if (typeof locations === "string") {
     try {
       const parsed = JSON.parse(locations);
@@ -159,71 +153,173 @@ const createPackage = asyncHandler(async (req, res) => {
 
 // Update a package belonging to a guide
 const updatePackage = asyncHandler(async (req, res) => {
-  const { packageId } = req.params;
-  const { locations, packageDescription, cost, tripDays } = req.body;
+  try {
+    const { packageId } = req.params;
+    let { locations, packageDescription, cost, tripDays, existingImages } =
+      req.body;
 
-  if (!packageId) {
-    throw new ApiError(400, "Package ID is required");
-  }
+    console.log("Raw request body:", req.body);
+    console.log("Raw request files:", req.files);
 
-  const pkg = await Package.findById(packageId);
-  if (!pkg) {
-    throw new ApiError(404, "Package not found");
-  }
-
-  if (locations !== undefined) {
-    if (!Array.isArray(locations) || locations.length === 0) {
-      throw new ApiError(400, "Locations must be a non-empty array");
+    if (!packageId) {
+      throw new ApiError(400, "Package ID is required");
     }
+
+    const pkg = await Package.findById(packageId);
+    if (!pkg) {
+      throw new ApiError(404, "Package not found");
+    }
+
+    // Parse locations if it's a string
+    try {
+      locations =
+        typeof locations === "string" ? JSON.parse(locations) : locations;
+      console.log("Parsed locations:", locations);
+
+      // Additional validation for locations
+      if (!Array.isArray(locations)) {
+        throw new Error("Locations must be an array");
+      }
+
+      // Filter out empty strings and trim values
+      locations = locations
+        .map((loc) => loc.trim())
+        .filter((loc) => loc !== "");
+
+      if (locations.length === 0) {
+        throw new Error("At least one non-empty location is required");
+      }
+    } catch (err) {
+      console.error("Error parsing locations:", err);
+      throw new ApiError(400, err.message || "Invalid locations format");
+    }
+
+    // Parse existingImages if it's a string
+    try {
+      existingImages =
+        typeof existingImages === "string"
+          ? JSON.parse(existingImages)
+          : existingImages;
+      console.log("Parsed existingImages:", existingImages);
+
+      if (existingImages && !Array.isArray(existingImages)) {
+        throw new Error("Existing images must be an array");
+      }
+    } catch (err) {
+      console.error("Error parsing existingImages:", err);
+      existingImages = [];
+    }
+
+    // Update package fields
     pkg.locations = locations;
-  }
 
-  if (packageDescription !== undefined) {
-    pkg.packageDescription = packageDescription;
-  }
-
-  if (cost !== undefined) {
-    if (isNaN(cost) || Number(cost) < 0) {
-      throw new ApiError(400, "Cost must be a valid non-negative number");
-    }
-    pkg.cost = Number(cost);
-  }
-
-  if (tripDays !== undefined) {
-    if (isNaN(tripDays) || Number(tripDays) < 1) {
-      throw new ApiError(400, "Trip days must be at least 1");
-    }
-    pkg.tripDays = Number(tripDays);
-  }
-
-  // Optional: Replace package images
-  const imageFiles = req.files?.packageImages;
-  if (Array.isArray(imageFiles) && imageFiles.length > 0) {
-    for (const url of pkg.images) {
-      const publicId = url.split("/").pop().split(".")[0];
-      await deleteFromCloudinary(publicId);
+    if (packageDescription) {
+      pkg.packageDescription = packageDescription.trim();
     }
 
+    if (cost !== undefined) {
+      const numCost = Number(cost);
+      if (isNaN(numCost) || numCost < 0) {
+        throw new ApiError(400, "Cost must be a valid non-negative number");
+      }
+      pkg.cost = numCost;
+    }
+
+    if (tripDays !== undefined) {
+      const numTripDays = Number(tripDays);
+      if (isNaN(numTripDays) || numTripDays < 1) {
+        throw new ApiError(400, "Trip days must be at least 1");
+      }
+      pkg.tripDays = numTripDays;
+    }
+
+    // Handle images
     let newImages = [];
-    for (const file of imageFiles) {
-      const cloudImage = await uploadOnCloudinary(file.path);
-      if (cloudImage?.url) {
-        newImages.push(cloudImage.url);
+    // When using upload.fields, files are organized by field name
+    const imageFiles = req.files?.packageImages || [];
+    console.log("Raw files from multer:", req.files);
+    console.log("Processing image files:", imageFiles);
+
+    // Delete removed images from Cloudinary
+    if (Array.isArray(existingImages)) {
+      const imagesToDelete = pkg.images.filter(
+        (img) => !existingImages.includes(img)
+      );
+      for (const url of imagesToDelete) {
+        try {
+          const publicId = url.split("/").pop().split(".")[0];
+          await deleteFromCloudinary(publicId);
+          console.log("Deleted image from Cloudinary:", publicId);
+        } catch (err) {
+          console.error("Error deleting image from Cloudinary:", err);
+        }
+      }
+      // Update package images with remaining existing images
+      pkg.images = existingImages;
+    }
+
+    // Upload new images if any
+    if (imageFiles.length > 0) {
+      console.log("Attempting to upload files:", imageFiles.length);
+      for (const file of imageFiles) {
+        try {
+          if (!file.path) {
+            console.error("File path is missing:", file);
+            continue;
+          }
+          console.log("Uploading file:", {
+            path: file.path,
+            originalname: file.originalname,
+            size: file.size,
+          });
+          const cloudImage = await uploadOnCloudinary(file.path);
+          if (cloudImage?.url) {
+            newImages.push(cloudImage.url);
+            console.log("Successfully uploaded to Cloudinary:", cloudImage.url);
+          } else {
+            console.error(
+              "Failed to upload image to Cloudinary:",
+              file.originalname
+            );
+            throw new Error(`Failed to upload image: ${file.originalname}`);
+          }
+        } catch (err) {
+          console.error("Error processing file:", file.originalname, err);
+          throw new ApiError(500, `Error uploading image: ${err.message}`);
+        }
+      }
+
+      if (newImages.length > 0) {
+        // Add new images to package
+        pkg.images = [...pkg.images, ...newImages];
+        console.log("Updated package images:", pkg.images);
       }
     }
 
-    if (newImages.length > 0) {
-      pkg.images = newImages;
+    // Validate total number of images
+    if (pkg.images.length > 5) {
+      throw new ApiError(400, "Maximum 5 images allowed");
     }
+
+    if (pkg.images.length === 0) {
+      throw new ApiError(400, "At least one image is required");
+    }
+
+    const savedPackage = await pkg.save();
+    console.log("Updated package:", savedPackage);
+
+    res.status(200).json({
+      success: true,
+      message: "Package updated successfully",
+      data: savedPackage,
+    });
+  } catch (err) {
+    console.error("Package update error:", err);
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Failed to update package"
+    );
   }
-
-  await pkg.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Package updated successfully",
-    data: pkg,
-  });
 });
 
 // Delete a package belonging to a guide
