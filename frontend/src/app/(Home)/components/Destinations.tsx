@@ -19,23 +19,23 @@ export default function Destinations() {
   const destinations: Destination[] = [
     {
       id: 1,
-      name: "Bali",
-      location: "Indonesia",
-      image: "/travel1.avif",
+      name: "Mysore Palace",
+      location: "India",
+      image: "/MysorePalace.jpeg",
       rating: 4.8,
     },
     {
       id: 2,
-      name: "Santorini",
-      location: "Greece",
-      image: "/travel2.avif",
+      name: "Eiffel Tower",
+      location: "Paris",
+      image: "/EiffelTower.webp",
       rating: 4.9,
     },
     {
       id: 3,
-      name: "Kyoto",
-      location: "Japan",
-      image: "/travel3.avif",
+      name: "Goa Beaches",
+      location: "India",
+      image: "/Beach.jpg",
       rating: 4.7,
     },
   ];
@@ -94,14 +94,14 @@ export default function Destinations() {
                         {destination.name}
                       </h3>
                       <div className="flex items-center mt-1">
-                        <MapPin className="w-4 h-4 text-primary mr-1" />
+                        <MapPin className="w-4 h-4 text-secondary mr-1" />
                         <span className="text-white/80 text-sm">
                           {destination.location}
                         </span>
                       </div>
                     </div>
 
-                    <div className="bg-primary/90 text-primary-foreground rounded-md px-2 py-1 text-sm font-medium">
+                    <div className="bg-secondary/90 text-primary-foreground rounded-md px-2 py-1 text-sm font-medium">
                       {destination.rating}
                     </div>
                   </div>
@@ -114,7 +114,7 @@ export default function Destinations() {
                 animate={{
                   borderColor:
                     hoveredIndex === index
-                      ? "hsl(var(--primary))"
+                      ? "hsl(var(--secondary))"
                       : "transparent",
                 }}
                 transition={{ duration: 0.3 }}

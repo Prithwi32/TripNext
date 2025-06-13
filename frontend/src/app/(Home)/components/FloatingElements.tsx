@@ -20,6 +20,21 @@ export default function FloatingElements() {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // Function to get diverse colors for elements
+  const getElementColor = (baseColor: string, index: number) => {
+    const colors = {
+      primary: ["#33ADFF", "#3B82F6", "#2563EB", "#1E40AF", "#1D4ED8"],
+      secondary: ["#FFA600", "#F59E0B", "#D97706", "#B45309", "#FBBF24"],
+      accent: ["#2CC98F", "#10B981", "#059669", "#047857", "#34D399"],
+    };
+
+    // Get the color array based on the base color, fallback to primary
+    const colorArray =
+      colors[baseColor as keyof typeof colors] || colors.primary;
+    // Use the index to cycle through the array
+    return colorArray[index % colorArray.length];
+  };
+
   // Handle theme mounting to prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
@@ -38,7 +53,6 @@ export default function FloatingElements() {
     { left: "85%", top: "40%" },
     { left: "30%", top: "85%" },
   ];
-
   const elements = [
     {
       icon: <Plane size={28} />,
@@ -82,7 +96,7 @@ export default function FloatingElements() {
         rotate: [0, -15, 5, -5, 0],
       },
       duration: 32,
-      color: "primary",
+      color: "secondary",
     },
     {
       icon: <Compass size={20} />,
@@ -93,7 +107,7 @@ export default function FloatingElements() {
         rotate: [0, 25, -15, 10, 0],
       },
       duration: 26,
-      color: "secondary",
+      color: "primary",
     },
     {
       icon: <CloudSunRain size={24} />,
@@ -115,7 +129,7 @@ export default function FloatingElements() {
         rotate: [0, -5, 15, -10, 0],
       },
       duration: 33,
-      color: "primary",
+      color: "secondary",
     },
     {
       icon: <Map size={21} />,
@@ -126,7 +140,7 @@ export default function FloatingElements() {
         rotate: [0, 20, -10, 5, 0],
       },
       duration: 29,
-      color: "secondary",
+      color: "primary",
     },
     {
       icon: <Ticket size={19} />,
@@ -148,7 +162,7 @@ export default function FloatingElements() {
         rotate: [0, 10, -5, 15, 0],
       },
       duration: 27,
-      color: "primary",
+      color: "accent",
     },
   ];
 
@@ -159,24 +173,27 @@ export default function FloatingElements() {
       {elements.map((element, index) => (
         <motion.div
           key={index}
-          className={`absolute text-${element.color}/60 dark:text-${element.color}/40 filter drop-shadow-md`}
           style={{
             left: positions[index].left,
             top: positions[index].top,
+            color: getElementColor(element.color, index),
+            opacity: theme === "dark" ? 0.25 : 0.4,
           }}
+          className="absolute filter drop-shadow-sm"
           initial={{ opacity: 0 }}
           animate={{
-            opacity: 1,
+            opacity: theme === "dark" ? 0.25 : 0.4,
             x: element.path.x,
             y: element.path.y,
             rotate: element.path.rotate,
           }}
           transition={{
-            opacity: { duration: 1, delay: element.delay },
+            opacity: { duration: 1.5, delay: element.delay },
             repeat: Infinity,
             duration: element.duration,
             delay: element.delay,
             ease: "linear",
+            repeatType: "loop",
           }}
         >
           {element.icon}

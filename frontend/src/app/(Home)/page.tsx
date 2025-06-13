@@ -1,4 +1,3 @@
-import About from "./components/About";
 import Hero from "./components/Hero";
 import SearchBar from "./components/SearchBar";
 import Destinations from "./components/Destinations";
