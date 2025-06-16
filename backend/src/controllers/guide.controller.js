@@ -105,6 +105,7 @@ const loginGuide = asyncHandler(async (req, res) => {
       id: guide._id,
       name: guide.guideName,
       email: guide.guideEmail,
+      profileImage:guide.profileImage,
       role: "guide",
     },
   });

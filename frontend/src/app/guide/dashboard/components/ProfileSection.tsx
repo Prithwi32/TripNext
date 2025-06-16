@@ -13,7 +13,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Save, X, Phone, Mail, Calendar, Upload } from "lucide-react";
+import {
+  Edit,
+  Save,
+  X,
+  Phone,
+  Mail,
+  Calendar,
+  Upload,
+  RefreshCw,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { axiosInstance } from "@/lib/axios";
 import { useSession } from "next-auth/react";
@@ -56,6 +65,17 @@ export function ProfileSection() {
   const [isUploading, setIsUploading] = useState(false);
 
   const userId = session?.user?.id;
+
+  // Function to generate a random avatar URL
+  const generateRandomAvatar = () => {
+    const idx = Math.floor(Math.random() * 100) + 1; // 1-100 included
+    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    setEditData((prev) => ({
+      ...prev,
+      profileImage: randomAvatar,
+    }));
+    setErrors({ ...errors, profileImage: "" });
+  };
 
   useEffect(() => {
     if (status !== "authenticated" || !userId) return;
@@ -259,39 +279,45 @@ export function ProfileSection() {
     setIsEditing(false);
   };
 
-const handleSave = async () => {
-  if (!validateInputs() || !editData || !profileData) {
-    toast.error("Please fix the errors before saving");
-    return;
-  }
+  const handleSave = async () => {
+    if (!validateInputs() || !editData || !profileData) {
+      toast.error("Please fix the errors before saving");
+      return;
+    }
 
-  try {
-    const updateData = {
-      guideName: editData.guideName || profileData.guideName,
-      contactNumber: editData.contactNumber || profileData.contactNumber,
-      description: editData.description || profileData.description,
-      profileImage: editData.profileImage || profileData.profileImage,
-    };
-
-    await axiosInstance.patch("/api/guide/update", updateData);
-
-    setProfileData((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        guideName: editData.guideName || prev.guideName,
-        contactNumber: editData.contactNumber || prev.contactNumber,
-        description: editData.description || prev.description,
-        profileImage: editData.profileImage || prev.profileImage,
+    try {
+      const updateData = {
+        guideName: editData.guideName || profileData.guideName,
+        contactNumber: editData.contactNumber || profileData.contactNumber,
+        description: editData.description || profileData.description,
+        profileImage: editData.profileImage || profileData.profileImage,
       };
-    });
 
-    setIsEditing(false);
-    toast.success("Profile Updated!");
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to update profile");
-  }
-};
+      // If the profile image is a URL (string), send it directly to backend
+      if (typeof updateData.profileImage === "string") {
+        // No need for additional processing for random avatar URLs
+        // They're already in the correct format for the API
+      }
+
+      await axiosInstance.patch("/api/guide/update", updateData);
+
+      setProfileData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          guideName: editData.guideName || prev.guideName,
+          contactNumber: editData.contactNumber || prev.contactNumber,
+          description: editData.description || prev.description,
+          profileImage: editData.profileImage || prev.profileImage,
+        };
+      });
+
+      setIsEditing(false);
+      toast.success("Profile Updated!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    }
+  };
 
   if (status === "loading" || !profileData) return <p>Loading...</p>;
   if (!userId) return <p>User not logged in</p>;
@@ -320,8 +346,8 @@ const handleSave = async () => {
             <CardDescription>Your basic profile information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20">
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="h-24 w-24">
                 <AvatarImage
                   src={
                     typeof editData?.profileImage === "string"
@@ -338,38 +364,34 @@ const handleSave = async () => {
                 </AvatarFallback>
               </Avatar>
               {isEditing && (
-                <div className="space-y-2 w-64">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="url"
-                      placeholder="Image URL"
-                      value={
-                        typeof editData?.profileImage === "string"
-                          ? editData.profileImage
-                          : ""
-                      }
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          profileImage: e.target.value,
-                        })
-                      }
-                    />
-                    <span className="text-muted-foreground">or</span>
+                <div className="space-y-2 w-full max-w-md">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:justify-center">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={generateRandomAvatar}
+                      className="gap-2 w-full sm:w-auto"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Generate Random Avatar
+                    </Button>
+                    <Label
+                      htmlFor="profileImageUpload"
+                      className="cursor-pointer w-full sm:w-auto"
+                    >
+                      <div className="flex items-center justify-center gap-2 p-2 border rounded-md hover:bg-muted">
+                        <Upload className="h-4 w-4" />
+                        <span>Upload Image</span>
+                      </div>
+                      <Input
+                        id="profileImageUpload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </Label>
                   </div>
-                  <Label htmlFor="profileImageUpload" className="cursor-pointer">
-                    <div className="flex items-center gap-2 p-2 border rounded-md hover:bg-muted">
-                      <Upload className="h-4 w-4" />
-                      <span>Upload Image</span>
-                    </div>
-                    <Input
-                      id="profileImageUpload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
-                  </Label>
                   {errors.profileImage && (
                     <p className="text-sm text-red-500">
                       {errors.profileImage}

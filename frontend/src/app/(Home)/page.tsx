@@ -4,7 +4,7 @@ import Destinations from "./components/Destinations";
 import StatsBanner from "./components/StatsBanner";
 import FloatingElements from "./components/FloatingElements";
 import FeatureShowcase from "./components/FeatureShowcase";
-import Testimonials from "./components/Testimonials";
+import GlobeSection from "./components/GlobeSection";
 import ScrollEffect from "./components/ScrollEffect";
 import CallToAction from "./components/CallToAction";
 
@@ -21,7 +21,7 @@ export default function Home() {
         <StatsBanner />
         <Destinations />
         <FeatureShowcase />
-        <Testimonials />
+        <GlobeSection />
         <CallToAction />
       </main>
     </>
