@@ -10,11 +10,13 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       role?: string | null;
+      profileImage?: string | null;
     };
   }
   interface User {
     id: string;
     role?: string | null;
+    profileImage?: string | null;
   }
 }
 
@@ -44,7 +46,8 @@ export const NEXT_AUTH: NextAuthOptions = {
               id: response.data.user._id || response.data.user.id,
               email: response.data.user.email,
               role: response.data.user.role,
-              name: response.data.user.name
+              name: response.data.user.name,
+              profileImage: response.data.user.profileImage,
             };
           }
           throw new Error(response.data?.message || "Authentication failed");
@@ -75,6 +78,7 @@ export const NEXT_AUTH: NextAuthOptions = {
         token.role = user.role;
         token.name = user.name;
         token.email=  user.email
+        token.profileImage = user.profileImage || null;
       }
       return token;
     },
@@ -84,6 +88,7 @@ export const NEXT_AUTH: NextAuthOptions = {
         email: token.email as string,
         role: token.role as string,
         name: token.name as string,
+        profileImage: token.profileImage as string | null,
       };
       return session;
     },

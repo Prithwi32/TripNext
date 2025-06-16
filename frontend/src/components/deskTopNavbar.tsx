@@ -85,21 +85,15 @@ function DesktopNavbar() {
           {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-8 w-8 p-0"
-              >
-                <Avatar className="h-8 w-8">
+                <Avatar className="size-8 cursor-pointer">
                   <AvatarImage
-                    src=""
-                    alt={user.name || "User"}
+                    src={user.profileImage || ""}
+                    alt={user.profileImage || "User"}
                   />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
-              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex items-center justify-start gap-2 p-2">
