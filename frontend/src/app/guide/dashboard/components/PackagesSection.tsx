@@ -132,11 +132,11 @@ export function PackagesSection() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleViewDetails(pkg)} className="flex-1 gap-1">
+                <Button variant="outline" size="sm" onClick={() => handleViewDetails(pkg)} className="flex-1 gap-1 bg-secondary hover:bg-secondary/80">
                   <Eye className="h-4 w-4" />
                   View
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleEdit(pkg)} className="flex-1 gap-1">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(pkg)} className="flex-1 gap-1 bg-accent">
                   <Edit className="h-4 w-4" />
                   Edit
                 </Button>
@@ -144,7 +144,7 @@ export function PackagesSection() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleDelete(pkg._id)}
-                  className="gap-1 text-destructive hover:text-destructive"
+                  className="gap-1 text-destructive hover:text-destructive hover:bg-red-100"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

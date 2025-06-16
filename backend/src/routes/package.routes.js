@@ -18,8 +18,18 @@ router.route("/:packageId").get(getPackageById);
 //secure routes
 router
   .route("/create-package")
-  .post(isAuthenticated, upload.fields([{ name: "packageImages", maxCount: 5 }]), createPackage);
-router.route("/update/:packageId").patch(isAuthenticated, updatePackage);
+  .post(
+    isAuthenticated,
+    upload.fields([{ name: "packageImages", maxCount: 5 }]),
+    createPackage
+  );
+// router.route("/update/:packageId").patch(isAuthenticated, updatePackage);
+router.patch(
+  "/update/:packageId",
+  isAuthenticated,
+  upload.fields([{ name: "packageImages", maxCount: 5 }]),
+  updatePackage
+);
 router.route("/delete/:packageId").delete(isAuthenticated, deletePackage);
 
 export default router;
