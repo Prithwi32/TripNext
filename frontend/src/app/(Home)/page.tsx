@@ -6,8 +6,8 @@ import FloatingElements from "./components/FloatingElements";
 import FeatureShowcase from "./components/FeatureShowcase";
 import ScrollEffect from "./components/ScrollEffect";
 import CallToAction from "./components/CallToAction";
-import World from "./components/GlobeSection"
-import InteractiveGallery from "./components/InteractiveGallery";
+import World from "./components/GlobeSection";
+import InteractiveGallery from "../user/gallery/components/InteractiveGallery";
 
 export default function Home() {
   return (

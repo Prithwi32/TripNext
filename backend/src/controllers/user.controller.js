@@ -3,6 +3,7 @@ import { User } from "../models/user.models.js";
 import sendOTP from "../utils/sendEmail.js";
 import { hash, compare } from "bcryptjs";
 import { ApiError } from "../utils/ApiError.js";
+import jwt from "jsonwebtoken";
 
 // Signup Controller (Validates input, checks for existing user and generates and sends OTP)
 const signupUser = asyncHandler(async (req, res) => {
@@ -94,15 +95,27 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Access denied: Incorrect password");
   }
 
+  // Create JWT token
+  const token = jwt.sign(
+    {
+      _id: user._id,
+      email: user.userEmail,
+      role: "user",
+    },
+    process.env.NEXTAUTH_SECRET,
+    { algorithm: "HS256", expiresIn: "24h" }
+  );
+
   res.status(200).json({
     message: "Login successful",
     user: {
-      id:user._id,
+      id: user._id,
       profileImage: user.profileImage,
       name: user.userName,
       email: user.userEmail,
       role: "user",
     },
+    token,
   });
 });
 
@@ -200,8 +213,11 @@ const resetPassword = asyncHandler(async (req, res) => {
 //get all the detail of a user
 const getUserDetails = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
-  const userDetails = await User.findOne({ userEmail });
-  console.log(userDetails);
+  const userDetails = await User.findOne(
+    { userEmail },
+    "-password -otp -otpExpiry -__v"
+  );
+
   if (!userDetails) {
     throw new ApiError(404, "No user found");
   }
@@ -232,6 +248,10 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Old password is incorrect");
   }
 
+  if (oldPassword === newPassword) {
+    throw new ApiError(400, "New password must be different from old password");
+  }
+
   const hashedNewPassword = await hash(newPassword, 10);
   user.password = hashedNewPassword;
   await user.save();
@@ -245,24 +265,33 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const accountDetails = req.body;
   const userEmail = req.user.email;
+
   const details = await User.findOne({ userEmail: userEmail });
-  if (
-    !accountDetails.userName ||
-    !accountDetails.profileImage ||
-    !accountDetails.about
-  ) {
-    throw new ApiError(400, "All fields are required");
+  if (!details) {
+    throw new ApiError(404, "User not found");
   }
-  const updatedDetails = await User.findByIdAndUpdate(
-    details?._id,
-    accountDetails,
-    {
-      new: true,
+
+  const allowedFields = ["userName", "profileImage", "about"];
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (accountDetails[field] !== undefined) {
+      updates[field] = accountDetails[field];
     }
-  );
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new ApiError(400, "At least one valid field is required to update");
+  }
+
+  const updatedDetails = await User.findByIdAndUpdate(details._id, updates, {
+    new: true,
+  });
+
   res.status(200).json({
     success: true,
-    message: "User details updated successfully successfully",
+    message: "User details updated successfully",
+    data: updatedDetails,
   });
 });
 
@@ -275,5 +304,5 @@ export {
   changeCurrentPassword,
   updateAccountDetails,
   forgetPassword,
-  resetPassword
+  resetPassword,
 };

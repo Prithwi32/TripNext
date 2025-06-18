@@ -1,4 +1,12 @@
-import { HomeIcon, Images, LogOut, NotebookPen, UserIcon } from "lucide-react";
+import {
+  HomeIcon,
+  Images,
+  LogOut,
+  Logs,
+  NotebookPen,
+  TicketsPlane,
+  UserIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -34,12 +42,12 @@ function DesktopNavbar() {
   const getProfileRoute = () => {
     if (!user) return "/auth/login";
 
-    if(user.role === "guide"){
-      return "/guide/dashboard"
-    }else if(user.role === "user"){
-      return "/user/dashboard"
+    if (user.role === "guide") {
+      return "/guide/dashboard";
+    } else if (user.role === "user") {
+      return "/user/dashboard";
     }
-    return "auth/login"
+    return "auth/login";
   };
 
   return (
@@ -62,7 +70,7 @@ function DesktopNavbar() {
               className="flex items-center gap-2 hover:bg-secondary transition-colors duration-200"
               asChild
             >
-              <Link href="/trip-plans">
+              <Link href="/user/trip-recommend">
                 <NotebookPen className="w-4 h-4" />
                 <span className="hidden lg:inline">Trips Plans</span>
               </Link>
@@ -74,26 +82,48 @@ function DesktopNavbar() {
               className="flex items-center gap-2 hover:bg-secondary transition-colors duration-200"
               asChild
             >
-              <Link href="/gallery">
+              <Link href="/user/trip-packages">
+                <TicketsPlane className="w-4 h-4" />
+                <span className="hidden lg:inline">Trips Packages</span>
+              </Link>
+            </Button>
+          )}
+          {user.role == "user" && (
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 hover:bg-secondary transition-colors duration-200"
+              asChild
+            >
+              <Link href="/user/gallery">
                 <Images className="w-4 h-4" />
                 <span className="hidden lg:inline">Gallery</span>
               </Link>
             </Button>
           )}
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 hover:bg-secondary transition-colors duration-200"
+            asChild
+          >
+            <Link href="/blogs">
+              <Logs className="w-4 h-4" />
+              <span className="hidden lg:inline">Blogs</span>
+            </Link>
+          </Button>
           <ThemeToggle />
 
           {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Avatar className="size-8 cursor-pointer">
-                  <AvatarImage
-                    src={user.profileImage || ""}
-                    alt={user.profileImage || "User"}
-                  />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
+              <Avatar className="size-8 cursor-pointer">
+                <AvatarImage
+                  src={user.profileImage || ""}
+                  alt={user.profileImage || "User"}
+                />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex items-center justify-start gap-2 p-2">
@@ -131,10 +161,10 @@ function DesktopNavbar() {
         </>
       ) : (
         <>
-        <ThemeToggle/>
-        <Button variant="default" onClick={() => signIn()}>
-          Sign In
-        </Button>
+          <ThemeToggle />
+          <Button variant="default" onClick={() => signIn()}>
+            Sign In
+          </Button>
         </>
       )}
     </div>
