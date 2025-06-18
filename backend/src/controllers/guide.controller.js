@@ -4,6 +4,7 @@ import sendOTP from "../utils/sendEmail.js";
 import { hash, compare } from "bcryptjs";
 import { ApiError } from "../utils/ApiError.js";
 import { Package } from "../models/package.models.js";
+import jwt from "jsonwebtoken";
 
 // signup guide
 const signupGuide = asyncHandler(async (req, res) => {
@@ -99,15 +100,27 @@ const loginGuide = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Access denied: Incorrect password");
   }
 
+  // Create JWT token
+  const token = jwt.sign(
+    {
+      _id: guide._id,
+      email: guide.guideEmail,
+      role: "guide",
+    },
+    process.env.NEXTAUTH_SECRET,
+    { algorithm: "HS256", expiresIn: "24h" }
+  );
+
   res.status(200).json({
     message: "Login successful",
     user: {
       id: guide._id,
       name: guide.guideName,
       email: guide.guideEmail,
-      profileImage:guide.profileImage,
+      profileImage: guide.profileImage,
       role: "guide",
     },
+    token,
   });
 });
 
@@ -160,9 +173,12 @@ const getAllGuides = asyncHandler(async (req, res) => {
 //get all the details of a single guide
 const getGuideDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const guideDetails = await Guide.findById(id, "-password -otp -otpExpiry -__v");
+  const guideDetails = await Guide.findById(
+    id,
+    "-password -otp -otpExpiry -__v"
+  );
   const packageDetails = await Package.find({ guide: id });
-  
+
   if (!guideDetails) {
     throw new ApiError(404, "No user found");
   }
@@ -184,7 +200,12 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Guide not found");
   }
 
-  const allowedFields = ["guideName", "contactNumber", "description", "profileImage"];
+  const allowedFields = [
+    "guideName",
+    "contactNumber",
+    "description",
+    "profileImage",
+  ];
   const updates = {};
 
   for (const field of allowedFields) {
@@ -197,7 +218,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "At least one valid field is required to update");
   }
 
-  const updatedDetails = await Guide.findByIdAndUpdate(details._id, updates, { new: true });
+  const updatedDetails = await Guide.findByIdAndUpdate(details._id, updates, {
+    new: true,
+  });
 
   res.status(200).json({
     success: true,

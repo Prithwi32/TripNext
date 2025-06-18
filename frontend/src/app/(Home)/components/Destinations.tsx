@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import Image from "next/image";
+import { motion, easeOut } from "framer-motion";
+
 
 interface Destination {
   id: number;
@@ -12,6 +13,17 @@ interface Destination {
   image: string;
   rating: number;
 }
+
+const cardVariants = {
+  hover: {
+    y: -10,
+    transition: { duration: 0.3, ease: easeOut },
+  },
+  initial: {
+    y: 0,
+    transition: { duration: 0.3, ease: easeOut },
+  },
+};
 
 export default function Destinations() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -39,17 +51,6 @@ export default function Destinations() {
       rating: 4.7,
     },
   ];
-
-  const cardVariants = {
-    hover: {
-      y: -10,
-      transition: { duration: 0.3, ease: "easeOut" },
-    },
-    initial: {
-      y: 0,
-      transition: { duration: 0.3, ease: "easeOut" },
-    },
-  };
 
   return (
     <div className="py-16 relative z-10">
