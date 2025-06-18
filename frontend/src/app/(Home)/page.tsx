@@ -7,6 +7,7 @@ import FeatureShowcase from "./components/FeatureShowcase";
 import ScrollEffect from "./components/ScrollEffect";
 import CallToAction from "./components/CallToAction";
 import World from "./components/GlobeSection"
+import InteractiveGallery from "./components/InteractiveGallery";
 
 export default function Home() {
   return (

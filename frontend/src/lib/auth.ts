@@ -31,16 +31,18 @@ export const NEXT_AUTH: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-        
+
         const { email, password, role } = credentials;
-        const endpoint = role === "guide" ? "/api/guide/login" : "/api/user/login";
-        const data = role === "guide" 
-          ? { guideEmail: email, password }
-          : { userEmail: email, password };
+        const endpoint =
+          role === "guide" ? "/api/guide/login" : "/api/user/login";
+        const data =
+          role === "guide"
+            ? { guideEmail: email, password }
+            : { userEmail: email, password };
 
         try {
           const response = await axiosInstance.post(endpoint, data);
-          
+
           if (response.data?.user) {
             return {
               id: response.data.user._id || response.data.user.id,
@@ -52,22 +54,26 @@ export const NEXT_AUTH: NextAuthOptions = {
           }
           throw new Error(response.data?.message || "Authentication failed");
         } catch (error: any) {
-          throw new Error(error.response?.data?.message || "Authentication failed");
+          throw new Error(
+            error.response?.data?.message || "Authentication failed"
+          );
         }
       },
     }),
   ],
-   session: {
+  session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 1 day
   },
   jwt: {
     secret: process.env.NEXTAUTH_SECRET,
     encode: async ({ secret, token }) => {
-      return jwt.sign(token!, secret, { algorithm: 'HS256' });
+      return jwt.sign(token!, secret, { algorithm: "HS256" });
     },
     decode: async ({ secret, token }) => {
-      return jwt.verify(token as string, secret, { algorithms: ['HS256'] }) as any;
+      return jwt.verify(token as string, secret, {
+        algorithms: ["HS256"],
+      }) as any;
     },
   },
   callbacks: {
@@ -77,7 +83,7 @@ export const NEXT_AUTH: NextAuthOptions = {
         token.email = user.email;
         token.role = user.role;
         token.name = user.name;
-        token.email=  user.email
+        token.email = user.email;
         token.profileImage = user.profileImage || null;
       }
       return token;
@@ -91,17 +97,6 @@ export const NEXT_AUTH: NextAuthOptions = {
         profileImage: token.profileImage as string | null,
       };
       return session;
-    },
-  },
-  cookies: {
-    sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
     },
   },
   pages: {

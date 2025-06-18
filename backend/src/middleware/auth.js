@@ -4,9 +4,13 @@ import { Guide } from "../models/guide.models.js";
 
 export const isAuthenticated = async (req, res, next) => {
   try {
-    const token =
-      req.cookies["next-auth.session-token"] ||
-      req.cookies["__Secure-next-auth.session-token"];
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
 
     if (!token) {
       return res.status(401).json({ error: "No token provided" });
