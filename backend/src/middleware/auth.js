@@ -16,43 +16,46 @@ export const isAuthenticated = async (req, res, next) => {
       return res.status(401).json({ error: "No token provided" });
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET, {
-      algorithms: ["HS256"],
-    });
+    try {
+      const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET, {
+        algorithms: ["HS256"],
+      });
 
-    if (!decoded) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    if (decoded.role === "user") {
-      const user = await User.findOne({ userEmail: decoded.email });
-      if (!user) {
-        return res.status(401).json({ error: "User not found" });
+      if (!decoded) {
+        return res.status(401).json({ error: "Invalid token" });
       }
-    } else if (decoded.role === "guide") {
-      const guide = await Guide.findOne({ guideEmail: decoded.email });
-      if (!guide) {
-        return res.status(401).json({ error: "Guide not found" });
+
+      if (decoded.role === "user") {
+        const user = await User.findOne({ userEmail: decoded.email });
+        if (!user) {
+          return res.status(401).json({ error: "User not found" });
+        }
+      } else if (decoded.role === "guide") {
+        const guide = await Guide.findOne({ guideEmail: decoded.email });
+        if (!guide) {
+          return res.status(401).json({ error: "Guide not found" });
+        }
       }
+
+      req.user = {
+        _id: decoded._id,
+        email: decoded.email,
+        role: decoded.role,
+      };
+
+      next();
+    } catch (jwtError) {
+      console.error("JWT Verification Error:", jwtError.message);
+      if (jwtError.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "Session expired" });
+      }
+      if (jwtError.name === "JsonWebTokenError") {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+      return res.status(401).json({ error: "Authentication failed" });
     }
-
-    req.user = {
-      _id: decoded._id,
-      email: decoded.email,
-      role: decoded.role,
-    };
-
-    next();
   } catch (error) {
-    console.error("JWT Verification Error:", error.message);
-
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Session expired" });
-    }
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
+    console.error("Authentication Error:", error.message);
     return res.status(500).json({ error: "Authentication failed" });
   }
 };

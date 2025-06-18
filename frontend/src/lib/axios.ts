@@ -11,7 +11,11 @@ axiosInstance.interceptors.request.use(
   async (config) => {
     const session = await getSession();
     if (session?.user) {
-      config.headers.Authorization = `Bearer ${session.user.id}`;
+      // Get the token from the session
+      const token = session.user.token;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
