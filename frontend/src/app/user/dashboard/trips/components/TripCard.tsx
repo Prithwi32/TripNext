@@ -42,7 +42,7 @@ export default function TripCard({ trip, onEdit, onDelete }: TripCardProps) {
     <Card className="overflow-hidden transition-all hover:shadow-lg group relative border-primary/5">
       {/* Card Ribbon - Cost Badge */}
       <div className="absolute top-0 right-0 z-10 mt-4 transform translate-x-1">
-        <Badge className="shadow-md bg-gradient-to-r from-primary to-primary/80 border-0 px-3 py-1.5 text-white font-medium">
+        <Badge className="shadow-md bg-gradient-to-r from-accent to-primary/80 border-0 px-3 py-1.5 text-white font-medium">
           <IndianRupee className="h-3.5 w-3.5 mr-1 inline-flex" />
           {trip.cost}
         </Badge>
