@@ -45,20 +45,7 @@ const tripFormSchema = z.object({
   }),
   hashtags: z.array(z.string()),
   guide: z.string().nullable(),
-  tripImage: z
-    .instanceof(FileList)
-    .optional()
-    .refine(
-      (files) => {
-        if (!files) return true;
-        return Array.from(files).every((file) =>
-          ["image/jpeg", "image/jpg", "image/png"].includes(file.type)
-        );
-      },
-      {
-        message: "Only JPG, PNG and WebP formats are supported.",
-      }
-    ),
+  tripImage: z.any().optional(),
 });
 
 interface TripFormProps {
@@ -133,6 +120,22 @@ export default function TripForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
+
+      // Validate file types client-side
+      const validFileTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+      ];
+      const allValid = newFiles.every((file) =>
+        validFileTypes.includes(file.type)
+      );
+      if (!allValid) {
+        form.setError("tripImage", {
+          message: "Only JPG and PNG formats are supported.",
+        });
+        return;
+      }
 
       // Combine with existing selected files
       const allFiles = [...selectedFiles, ...newFiles];
@@ -502,7 +505,7 @@ export default function TripForm({
                   </>
                 )}
 
-                {form.formState.errors.tripImage && (
+                {form.formState.errors.tripImage && typeof form.formState.errors.tripImage.message === "string" && (
                   <p className="text-sm font-medium text-destructive mt-2">
                     {form.formState.errors.tripImage.message}
                   </p>
