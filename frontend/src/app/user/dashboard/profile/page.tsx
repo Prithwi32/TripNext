@@ -19,10 +19,21 @@ export default function ProfilePage() {
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="info">Profile Information</TabsTrigger>
-          <TabsTrigger value="edit">Edit Profile</TabsTrigger>
+        <TabsList className="mb-4 border border-emerald-200 dark:border-gray-700 rounded">
+          <TabsTrigger
+            value="info"
+            className="px-4 py-2 border border-transparent hover:border-orange-400 dark:hover:border-gray-600 rounded"
+          >
+            Profile Information
+          </TabsTrigger>
+          <TabsTrigger
+            value="edit"
+            className="px-4 py-2 border border-transparent hover:border-orange-400 dark:hover:border-gray-600 rounded"
+          >
+            Edit Profile
+          </TabsTrigger>
         </TabsList>
+
         <TabsContent value="info">
           <Card>
             <CardHeader>
