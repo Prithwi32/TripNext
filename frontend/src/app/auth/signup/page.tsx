@@ -14,7 +14,16 @@ export default async function SignupPage() {
       {/* Left side - Image/Animation (reversed order on desktop) */}
       <div className="hidden w-1/2 bg-gradient-to-br from-accent/30 to-primary/30 md:block">
         <AnimatedIllustration
-          images={["/u.avif", "/travel1.avif", "/travel2.avif", "/travel3.avif",  "/travel4.avif", "/travel5.avif",  "/travel7.avif", "/travel6.avif"]}
+          images={[
+            "/u.avif",
+            "/travel1.avif",
+            "/travel2.avif",
+            "/travel3.avif",
+            "/travel4.avif",
+            "/travel5.avif",
+            "/travel7.avif",
+            "/travel6.avif",
+          ]}
           title="Discover Amazing Destinations"
           description="Join our community of travelers and guides to explore the world's most beautiful places"
           animation="fade"
@@ -27,7 +36,7 @@ export default async function SignupPage() {
           <div className="mb-8">
             <div className="flex items-center gap-2">
               <Plane className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold text-primary">TravelNext</h1>
+              <h1 className="text-2xl font-bold text-primary">TripNext</h1>
             </div>
             <h2 className="mt-6 text-3xl font-bold">Create an account</h2>
             <p className="mt-2 text-muted-foreground">

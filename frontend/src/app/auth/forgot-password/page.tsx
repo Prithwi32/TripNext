@@ -1,9 +1,9 @@
+import { ForgotPasswordForm } from "./components/ForgotPasswordForm";
 import { Plane } from "lucide-react";
-import { VerifyForm } from "./components/verify-form";
 import { AnimatedIllustration } from "@/components/animated-illustration";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export default function VerifyPage() {
+export default function ForgotPassword() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary/10 to-secondary/10 md:flex-row">
       {/* Theme Toggle */}
@@ -19,7 +19,7 @@ export default function VerifyPage() {
             <h1 className="text-2xl font-bold text-primary">TripNext</h1>
           </div>
 
-          <VerifyForm />
+          <ForgotPasswordForm />
         </div>
       </div>
 
