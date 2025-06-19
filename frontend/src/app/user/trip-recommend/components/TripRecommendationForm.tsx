@@ -382,7 +382,7 @@ export default function TripRecommendation() {
 
       <div className="gradient-bg"></div>
       <div className="container mx-auto px-4 py-8 min-h-screen mt-12">
-        <h1 className="text-4xl font-bold text-center mb-8 text-primary">
+        <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
           Discover Your Perfect Trip
         </h1>
 
@@ -409,7 +409,7 @@ export default function TripRecommendation() {
                     name="trip_type"
                     value={formData.trip_type}
                     onChange={handleChange}
-                    className="flex-1 p-3 text-black dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 p-3 text-black dark:text-white border dark:bg-gray-900 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter trip type..."
                   />
                   {showSuggestions.trip_type &&
@@ -470,7 +470,7 @@ export default function TripRecommendation() {
                         value={activityInput}
                         onChange={handleActivityInputChange}
                         placeholder="Type activity and select from suggestions"
-                        className="w-full p-3 text-black dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full p-3 text-black dark:text-white border dark:bg-gray-900 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       {showSuggestions.activities &&
                         suggestions.activities.length > 0 && (
@@ -529,7 +529,7 @@ export default function TripRecommendation() {
                       value={formData[id]}
                       onChange={handleChange}
                       placeholder={placeholder}
-                      className="flex-1 p-3 text-black dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="flex-1 p-3 text-black dark:bg-gray-900 dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 ))}

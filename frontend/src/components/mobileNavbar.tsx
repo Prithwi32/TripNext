@@ -6,6 +6,8 @@ import {
   MenuIcon,
   NotebookPen,
   UserIcon,
+  Plane,
+  TicketsPlane,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +29,7 @@ function MobileNavbar() {
 
   return (
     <div className="flex md:hidden items-center space-x-2">
-      <ThemeToggle/>
+      <ThemeToggle />
 
       <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
         <SheetTrigger asChild>
@@ -50,7 +52,6 @@ function MobileNavbar() {
                 Home
               </Link>
             </Button>
-
             {user ? (
               <>
                 {user.role == "user" && (
@@ -59,7 +60,7 @@ function MobileNavbar() {
                     className="flex items-center gap-3 justify-start hover:bg-secondary transition-colors duration-200"
                     asChild
                   >
-                    <Link href="/trip-plans">
+                    <Link href="/user/trip-recommend">
                       <NotebookPen className="w-4 h-4" />
                       Trip Plans
                     </Link>
@@ -71,9 +72,21 @@ function MobileNavbar() {
                     className="flex items-center gap-3 justify-start hover:bg-secondary transition-colors duration-200"
                     asChild
                   >
-                    <Link href="/gallery">
+                    <Link href="/user/trip-packages">
+                      <TicketsPlane className="w-4 h-4" />
+                      Trip Packages
+                    </Link>
+                  </Button>
+                )}
+                {user.role == "user" && (
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-3 justify-start hover:bg-secondary transition-colors duration-200"
+                    asChild
+                  >
+                    <Link href="/user/gallery">
                       <Images className="w-4 h-4" />
-                        Gallery
+                      Gallery
                     </Link>
                   </Button>
                 )}
@@ -82,10 +95,17 @@ function MobileNavbar() {
                   className="flex items-center gap-3 justify-start hover:bg-secondary transition-colors duration-200"
                   asChild
                 >
-                  <Link
-                    href={`/${
-                      user.role}/dashboard`}
-                  >
+                  <Link href="/blogs">
+                    <HomeIcon className="w-4 h-4" />
+                    Blogs
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-3 justify-start hover:bg-secondary transition-colors duration-200"
+                  asChild
+                >
+                  <Link href={`/${user.role}/dashboard`}>
                     <UserIcon className="w-4 h-4" />
                     Dashboard
                   </Link>
