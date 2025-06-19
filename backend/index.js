@@ -10,6 +10,7 @@ import tripRouter from "./src/routes/trip.routes.js";
 import packageRouter from "./src/routes/package.routes.js";
 import commentRouter from "./src/routes/comment.routes.js";
 import chatRouter from "./src/routes/chat.routes.js";
+import blogRouter from "./src/routes/blog.routes.js";
 
 dotenv.config();
 
@@ -37,12 +38,14 @@ app.use("/api/trip", tripRouter);
 app.use("/api/package", packageRouter);
 app.use("/api/comment", commentRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/blog", blogRouter);
 
 
 // global catch
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
+  console.log(err);
   res.status(statusCode).json({ message });
 });
 

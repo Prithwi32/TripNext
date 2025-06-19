@@ -3,6 +3,7 @@ import {
   changeCurrentPassword,
   forgetPassword,
   getUserDetails,
+  getUserRecentActivity,
   loginUser,
   resendOtp,
   resetPassword,
@@ -26,5 +27,6 @@ router.route("/reset-password").post(resetPassword);
 router.route("/").get(isAuthenticated, getUserDetails);
 router.route("/change-password").post(isAuthenticated, changeCurrentPassword);
 router.route("/update").patch(isAuthenticated, updateAccountDetails);
+router.route("/recent-activity").get(isAuthenticated, getUserRecentActivity);
 
 export default router;

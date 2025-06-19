@@ -13,19 +13,12 @@ const createBlog = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
+  const { blogDescription } = req.body;
+  const hashtags = req.body.hashtags || [];
 
-  const { trip, blogDescription, hashtags = [] } = req.body;
-
-  if (
-    !trip ||
-    trip.trim() === "" ||
-    !blogDescription ||
-    blogDescription.trim() === ""
-  ) {
-    throw new ApiError(400, "TripId and blogDescription are required");
+  if (!blogDescription || blogDescription.trim() === "") {
+    throw new ApiError(400, "BlogDescription is required");
   }
-
-  const tripDetails = await Trip.findById(trip);
 
   const imageFiles = req.files?.blogImages;
   if (!imageFiles || !Array.isArray(imageFiles) || imageFiles.length === 0) {
@@ -49,19 +42,13 @@ const createBlog = asyncHandler(async (req, res) => {
     console.log("Image upload failed", error);
     throw new ApiError(500, "Error uploading blog images");
   }
-
   try {
     const blog = await Blog.create({
       user: userId,
-      trip: trip.trim(),
       blogDescription: blogDescription.trim(),
       blogImages: uploadedImages,
       blogComments: [],
-      hashtags: Array.isArray(hashtags) ? hashtags : [],
-    });
-    tripDetails.blogId.push(blog._id);
-    const updatedTripDetails = await Trip.findByIdAndUpdate(trip, tripDetails, {
-      new: true,
+      hashtags: Array.isArray(hashtags) ? hashtags : hashtags ? [hashtags] : [],
     });
 
     return res.status(201).json({
@@ -97,19 +84,35 @@ const updateBlog = asyncHandler(async (req, res) => {
   if (blogDetails.user.toString() !== userId.toString()) {
     throw new ApiError(401, "UserId does not match. Unauthorized access!!");
   }
-
-  const { blogDescription, hashtags = [] } = req.body;
+  const { blogDescription } = req.body;
+  // Properly handle hashtags - could be an array already or a single value that needs to be wrapped
+  const hashtags = req.body.hashtags || [];
 
   if (!blogDescription || blogDescription.trim() === "") {
-    throw new ApiError(400, "BlogDescription are required");
+    throw new ApiError(400, "BlogDescription is required");
   }
+  // Get both new uploaded files and existing image URLs
+  const imageFiles = req.files?.blogImages || [];
+  const imageUrls = req.body.imageUrls || [];
 
-  const imageFiles = req.files?.blogImages;
-  if (!imageFiles || !Array.isArray(imageFiles) || imageFiles.length === 0) {
-    throw new ApiError(400, "At least one blog image must be uploaded");
-  }
+  // Get existing images from the blog
   let oldImages = blogDetails.blogImages;
   let uploadedImages = [];
+
+  // If we have imageUrls from request, use those as base (keep existing images)
+  if (Array.isArray(imageUrls) && imageUrls.length > 0) {
+    uploadedImages = [...imageUrls];
+  } else if (imageUrls && typeof imageUrls === "string") {
+    uploadedImages = [imageUrls];
+  }
+
+  // Check if we have either new files or kept existing images
+  if (
+    (imageFiles.length === 0 || !Array.isArray(imageFiles)) &&
+    uploadedImages.length === 0
+  ) {
+    throw new ApiError(400, "At least one blog image must be provided");
+  }
 
   try {
     for (const file of imageFiles) {
@@ -126,10 +129,13 @@ const updateBlog = asyncHandler(async (req, res) => {
     console.log("Image upload failed", error);
     throw new ApiError(500, "Error uploading blog images");
   }
-
   try {
     blogDetails.blogDescription = blogDescription;
-    blogDetails.hashtags = Array.isArray(hashtags) ? hashtags : [hashtags];
+    blogDetails.hashtags = Array.isArray(hashtags)
+      ? hashtags
+      : hashtags
+      ? [hashtags]
+      : [];
     blogDetails.blogImages = uploadedImages;
 
     const updatedBlog = await Blog.findByIdAndUpdate(blogId, blogDetails, {

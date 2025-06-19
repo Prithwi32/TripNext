@@ -10,7 +10,6 @@ const blogSchema = new Schema(
     trip: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Trip",
-      required: true,
     },
     blogDescription: {
       type: String,

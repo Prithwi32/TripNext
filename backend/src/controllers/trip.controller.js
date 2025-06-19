@@ -7,37 +7,39 @@ import {
 } from "../utils/cloudinary.js";
 import { User } from "../models/user.models.js";
 
-// get all Trips belonging to all users
-const viewAllTrips = asyncHandler(async (req, res) => {
-  const trips = await Trip.find({})
-    .populate({
-      path: "user",
-      select: "userName userEmail"
-    })
-    .populate({
-      path: "guide",
-      select: "guideName contactNumber",
-      options: { strictPopulate: false }
-    })
-    .populate({
-      path: "blogId",
-      select: "blogDescription createdAt",
-      options: { strictPopulate: false }
-    })
-    .sort({ createdAt: -1 }); // Newest first
-
-  if (!trips || trips.length === 0) {
-    throw new ApiError(404, "No trips found");
+// get trip by id
+const getTripById = asyncHandler(async (req, res) => {
+  const { tripId } = req.params;
+  if (!tripId) {
+    throw new ApiError(400, "Trip ID is required");
   }
+  const trip = await Trip.findById(tripId)
+    .populate("user", "userEmail")
+    .populate("guide", "_id guideName profileImage guideEmail");
+  if (!trip) {
+    throw new ApiError(404, "Trip not found");
+  }
+
+  const guideId = trip.guide ? trip.guide._id : null;
+  const guideDetails = trip.guide
+    ? {
+        guideName: trip.guide.guideName,
+        guideEmail: trip.guide.guideEmail,
+        profileImage: trip.guide.profileImage,
+      }
+    : null;  
+
+  trip.guide = guideId;
+
 
   return res.status(200).json({
     success: true,
-    message: "Trips fetched successfully",
-    data: trips,
+    message: "Trip fetched successfully",
+    data: {  ...trip._doc, guideDetails },
   });
 });
 
-//get all Tips belonging to a particular user
+///get all Tips belonging to a particular user
 const viewTrip = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
@@ -47,23 +49,36 @@ const viewTrip = asyncHandler(async (req, res) => {
   }
   //.populate("blogId", "blogDescription createdAt")
   const trips = await Trip.find({ user: userId })
-    .populate("guide", "guideName contactNumber")
+    .populate("guide", "guideName profileImage guideEmail")
     .sort({ createdAt: -1 });
 
-  if (!trips || trips.length === 0) {
-    throw new ApiError(404, "No trips found for this user");
-  }
+    const data = trips.map((trip) => {
+      const guideId = trip.guide ? trip.guide._id : null;
+      const guideDetails = trip.guide
+        ? {
+            guideName: trip.guide.guideName,
+            guideEmail: trip.guide.guideEmail,
+            profileImage: trip.guide.profileImage,
+          }
+        : null;
+
+      return {
+        ...trip._doc,
+        guide: guideId,
+        guideDetails,
+      };
+    });
 
   return res.status(200).json({
     success: true,
     message: "User's trips fetched successfully",
-    data: trips,
+    data: data,
   });
 });
 
 //create a trip for a particular user
 const createTrip = asyncHandler(async (req, res) => {
-  const userEmail = "nirmith10@gmail.com";//req.user.email;
+  const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
 
@@ -157,7 +172,7 @@ const updateTrip = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
-  console.log(userId, tripId)
+  console.log(userId, tripId);
   if (!tripId || !userId) {
     throw new ApiError(400, "Trip ID and User ID are required");
   }
@@ -168,17 +183,12 @@ const updateTrip = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Trip not found or not authorized");
   }
 
-  const {
-    tripLocation,
-    tripDescription,
-    cost,
-    hashtags,
-    guide,
-    blogId,
-  } = req.body;
+  const { tripLocation, tripDescription, cost, hashtags, guide, blogId } =
+    req.body;
 
   if (tripLocation !== undefined) trip.tripLocation = tripLocation.trim();
-  if (tripDescription !== undefined) trip.tripDescription = tripDescription.trim();
+  if (tripDescription !== undefined)
+    trip.tripDescription = tripDescription.trim();
   if (cost !== undefined) {
     if (isNaN(cost) || Number(cost) < 0) {
       throw new ApiError(400, "Cost must be a valid non-negative number");
@@ -201,10 +211,10 @@ const updateTrip = asyncHandler(async (req, res) => {
 //delete a trip belonging to a particular user
 const deleteTrip = asyncHandler(async (req, res) => {
   const { tripId } = req.params;
-  const userEmail = "prajwalbayari4@gmail.com";
+  const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
-  
+
   if (!tripId || !userId) {
     throw new ApiError(400, "Trip ID and User ID are required");
   }
@@ -222,7 +232,7 @@ const deleteTrip = asyncHandler(async (req, res) => {
       const publicId = url.split("/").pop().split(".")[0];
       await deleteFromCloudinary(publicId);
     }
-  
+
     return res.status(200).json({
       success: true,
       message: "Trip deleted successfully",
@@ -233,11 +243,4 @@ const deleteTrip = asyncHandler(async (req, res) => {
   }
 });
 
-
-export { 
-  viewAllTrips, 
-  viewTrip, 
-  createTrip, 
-  deleteTrip, 
-  updateTrip 
-};
+export { getTripById, viewTrip, createTrip, deleteTrip, updateTrip };
