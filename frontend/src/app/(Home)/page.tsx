@@ -21,7 +21,7 @@ export default function Home() {
         <StatsBanner />
         <Destinations />
         <FeatureShowcase />
-        <GlobeSection />
+        {/* <GlobeSection /> */}
         <CallToAction />
       </main>
     </>

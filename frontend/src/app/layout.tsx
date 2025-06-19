@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "react-hot-toast";
+import { Toaster as HotToaster } from "react-hot-toast";
+import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/providers";
 import { Outfit } from "next/font/google";
 import LayoutWrapper from "@/components/layout-wrapper";
@@ -45,10 +46,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          {" "}
           <Providers>
             <LayoutWrapper>{children}</LayoutWrapper>
           </Providers>
         </ThemeProvider>
+        <HotToaster />
         <Toaster />
       </body>
     </html>

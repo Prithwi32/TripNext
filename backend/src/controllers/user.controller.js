@@ -3,7 +3,7 @@ import { User } from "../models/user.models.js";
 import sendOTP from "../utils/sendEmail.js";
 import { hash, compare } from "bcryptjs";
 import { ApiError } from "../utils/ApiError.js";
-
+import mongoose from "mongoose";
 // Signup Controller (Validates input, checks for existing user and generates and sends OTP)
 const signupUser = asyncHandler(async (req, res) => {
   const { userName, userEmail, password } = req.body;
@@ -97,7 +97,7 @@ const loginUser = asyncHandler(async (req, res) => {
   res.status(200).json({
     message: "Login successful",
     user: {
-      id:user._id,
+      id: user._id,
       profileImage: user.profileImage,
       name: user.userName,
       email: user.userEmail,
@@ -266,6 +266,77 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   });
 });
 
+// Get user's recent activity and stats
+const getUserRecentActivity = asyncHandler(async (req, res) => {
+  const email = req.user.email;
+  const user = await User.findOne({ userEmail: email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const userId = user._id;
+
+  // Get user trips count
+  const tripCount = await mongoose.model("Trip").countDocuments({ user: userId });
+
+  // Get user blogs count
+  const blogCount = await mongoose.model("Blog").countDocuments({ user: userId });
+
+  // Get user comments count
+  const commentCount = await mongoose.model("Comment").countDocuments({ userId: userId });
+
+  // Get recent trips
+  const recentTrips = await mongoose.model("Trip")
+    .find({ user: userId })
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .select("tripLocation createdAt tripImages")
+    .lean();
+
+  // Get recent blogs
+  const recentBlogs = await mongoose.model("Blog")
+    .find({ user: userId })
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .select("blogDescription createdAt blogImages hashtags")
+    .lean();
+
+  // Combine and format recent activity
+  const recentActivity = [
+    ...recentTrips.map(trip => ({
+      type: 'trip',
+      title: trip.tripLocation,
+      description: trip.tripLocation,
+      image: trip.tripImages?.[0] || '',
+      createdAt: trip.createdAt,
+      id: trip._id
+    })), 
+    ...recentBlogs.map(blog => ({
+      type: 'blog',
+      title: blog.blogDescription?.split('\n')[0]?.slice(0, 30) + (blog.blogDescription?.length > 30 ? '...' : '') || 'Blog post',
+      description: blog.blogDescription?.slice(0, 50) + (blog.blogDescription?.length > 50 ? '...' : '') || '',
+      image: blog.blogImages?.[0] || '',
+      createdAt: blog.createdAt,
+      id: blog._id
+    }))
+  ]
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  .slice(0, 5);
+
+  // Return the data
+  res.status(200).json({
+    success: true,
+    data: {
+      stats: {
+        tripCount,
+        blogCount,
+        commentCount,
+      },
+      recentActivity
+    }
+  });
+});
+
 export {
   signupUser,
   verifyUser,
@@ -275,5 +346,6 @@ export {
   changeCurrentPassword,
   updateAccountDetails,
   forgetPassword,
-  resetPassword
+  resetPassword,
+  getUserRecentActivity
 };

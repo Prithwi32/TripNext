@@ -2,8 +2,8 @@ import { Router } from "express";
 import {
   createTrip,
   deleteTrip,
+  getTripById,
   updateTrip,
-  viewAllTrips,
   viewTrip,
 } from "../controllers/trip.controller.js";
 import { upload } from "../middleware/multer.middlewares.js";
@@ -11,11 +11,11 @@ import { isAuthenticated } from "../middleware/auth.js";
 
 const router = Router();
 
-//unsecure routes:
-router.route("/").get(viewAllTrips);
+
 
 //secure routes:
-router.route("/:tripId").get(isAuthenticated, viewTrip);
+router.route("/").get(isAuthenticated, viewTrip);
+router.route("/:tripId").get(isAuthenticated, getTripById);
 router.route("/update/:tripId").patch(isAuthenticated, updateTrip);
 router.route("/delete/:tripId").delete(isAuthenticated, deleteTrip);
 router
