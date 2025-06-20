@@ -390,7 +390,7 @@ function DashboardCard({
       <CardContent>
         <CardDescription className="mb-4">{description}</CardDescription>
         <Link href={href}>
-          <Button className="w-full bg-gradient-to-r from-accent to-secondary/80 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+          <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
             View {title}
           </Button>
         </Link>

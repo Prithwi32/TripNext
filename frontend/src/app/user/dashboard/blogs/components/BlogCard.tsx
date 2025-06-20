@@ -20,28 +20,33 @@ export function BlogCard({ blog, onEdit, onDelete }: BlogCardProps) {
   const formattedDate = formatDate(new Date(blog.createdAt));
   const [isImageError, setIsImageError] = useState(false);
 
-  // Extract first line as title (limited to 60 chars)
-  const blogTitle = blog.blogDescription.split("\n")[0].slice(0, 60);
+  // Use the blog title or fall back to extracting from description if needed
+  const displayTitle =
+    blog.blogTitle || blog.blogDescription.split("\n")[0].slice(0, 60);
 
   // Get excerpt for description - shorter excerpt to allow more space for metadata on mobile
   const excerpt =
     blog.blogDescription.length > 80
       ? blog.blogDescription.slice(0, 80) + "..."
-      : blog.blogDescription;  return (
+      : blog.blogDescription;
+  return (
     <Card className="overflow-hidden flex flex-col h-full border hover:shadow-md transition-all duration-200 group">
       {/* Blog Image Section */}
-      <div className="relative w-full h-44 sm:h-48 overflow-hidden">        <Image
+      <div className="relative w-full h-44 sm:h-48 overflow-hidden">
+        {" "}
+        <Image
           src={isImageError ? "/travel1.avif" : blog.blogImages[0]}
-          alt={blogTitle}
+          alt={displayTitle}
           fill
           className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
           onError={() => setIsImageError(true)}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-500 group-hover:from-black/80" />        {/* Title overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-500 group-hover:from-black/80" />{" "}
+        {/* Title overlay */}
         <div className="absolute bottom-0 left-0 p-4 w-full">
           <h3 className="text-lg font-semibold text-white line-clamp-2 transition-transform duration-300 group-hover:translate-x-1">
-            {blogTitle}
+            {displayTitle}
           </h3>
         </div>
       </div>

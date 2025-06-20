@@ -13,11 +13,11 @@ const createBlog = asyncHandler(async (req, res) => {
   const userEmail = req.user.email;
   const user = await User.findOne({ userEmail: userEmail });
   const userId = user._id;
-  const { blogDescription } = req.body;
+  const { blogDescription, blogTitle } = req.body;
   const hashtags = req.body.hashtags || [];
 
-  if (!blogDescription || blogDescription.trim() === "") {
-    throw new ApiError(400, "BlogDescription is required");
+  if (!blogDescription || blogDescription.trim() === "" || !blogTitle || blogTitle.trim() === "") {
+    throw new ApiError(400, "BlogDescription and BlogTitle are required");
   }
 
   const imageFiles = req.files?.blogImages;
@@ -46,6 +46,7 @@ const createBlog = asyncHandler(async (req, res) => {
     const blog = await Blog.create({
       user: userId,
       blogDescription: blogDescription.trim(),
+      blogTitle: blogTitle.trim(),
       blogImages: uploadedImages,
       blogComments: [],
       hashtags: Array.isArray(hashtags) ? hashtags : hashtags ? [hashtags] : [],
@@ -84,12 +85,12 @@ const updateBlog = asyncHandler(async (req, res) => {
   if (blogDetails.user.toString() !== userId.toString()) {
     throw new ApiError(401, "UserId does not match. Unauthorized access!!");
   }
-  const { blogDescription } = req.body;
+  const { blogDescription, blogTitle } = req.body;
   // Properly handle hashtags - could be an array already or a single value that needs to be wrapped
   const hashtags = req.body.hashtags || [];
 
-  if (!blogDescription || blogDescription.trim() === "") {
-    throw new ApiError(400, "BlogDescription is required");
+  if (!blogDescription || blogDescription.trim() === "" || !blogTitle || blogTitle.trim() === "") {
+    throw new ApiError(400, "BlogDescription and BlogTitle are required");
   }
   // Get both new uploaded files and existing image URLs
   const imageFiles = req.files?.blogImages || [];
@@ -131,6 +132,7 @@ const updateBlog = asyncHandler(async (req, res) => {
   }
   try {
     blogDetails.blogDescription = blogDescription;
+    blogDetails.blogTitle = blogTitle;
     blogDetails.hashtags = Array.isArray(hashtags)
       ? hashtags
       : hashtags
