@@ -229,23 +229,52 @@ const getMyBlogs = asyncHandler(async (req, res) => {
   }
 });
 
-//get all blogs except for the blogs created by the requesting user
+// get all blogs (public access)
 const getAllBlogs = asyncHandler(async (req, res) => {
-  const userEmail = req.user.email;
-  const user = await User.findOne({ userEmail: userEmail });
-  const userId = user._id;
-
   try {
-    const allBlogs = await Blog.find({ user: { $ne: userId } });
-    return res.status(200).json({
+    const allBlogs = await Blog.find({})
+      .populate("user", "userName userEmail profileImage")
+      .sort({ createdAt: -1 });
+
+
+    if (!allBlogs || allBlogs.length === 0) {
+        console.log("No blogs found after query.");
+    }
+
+    res.status(200).json({
       success: true,
-      message: "Fetched all blogs",
+      message: "Fetched all blogs successfully",
       data: allBlogs,
     });
   } catch (error) {
-    console.log("Can't fetch blogs", error);
-    throw new ApiError(500, "Failed to fetch all blogs.");
+    console.error("Error fetching blogs:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch blogs",
+    });
   }
 });
 
-export { createBlog, updateBlog, deleteBlog, getAllBlogs, getMyBlogs };
+// get a single blog by ID (public access)
+const getBlogById = asyncHandler(async (req, res) => {
+  const { blogid } = req.params;
+
+  try {
+    const blog = await Blog.findById(blogid).populate("user", "userName profileImage");
+
+    if (!blog) {
+      throw new ApiError(404, "Blog not found");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Fetched blog successfully",
+      data: blog,
+    });
+  } catch (error) {
+    console.error("Error fetching blog by ID:", error.message);
+    throw new ApiError(500, "Failed to fetch blog");
+  }
+});
+
+export { createBlog, updateBlog, deleteBlog, getAllBlogs, getMyBlogs, getBlogById };

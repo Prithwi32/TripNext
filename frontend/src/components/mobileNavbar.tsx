@@ -6,7 +6,7 @@ import {
   MenuIcon,
   NotebookPen,
   UserIcon,
-  Plane,
+  LogOut,
   TicketsPlane,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,7 @@ function MobileNavbar() {
                   className="flex items-center gap-3 justify-start w-full hover:bg-destructive/90 transition-colors duration-200"
                   onClick={() => signOut()}
                 >
-                  <UserIcon className="w-4 h-4" />
+                  <LogOut className="w-4 h-4" />
                   Logout
                 </Button>
               </>

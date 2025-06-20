@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CalendarClock, FileText, Map, User } from "lucide-react";
+import { CalendarClock, FileText, Map, MapPin, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Activity, UserActivityResponse, userService } from "./api";
 import Image from "next/image";
@@ -359,7 +359,14 @@ function ActivityItem({ activity }: { activity: Activity }) {
           {activity.title}
         </Link>
         <p className="text-xs text-muted-foreground line-clamp-1">
-          {activity.description}
+          {activity.type === "trip" ? (
+            <span className="flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              {activity.description}
+            </span>
+          ) : (
+            activity.description
+          )}
         </p>
       </div>
     </div>
