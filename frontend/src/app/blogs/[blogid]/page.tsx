@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Blog } from "@/app/user/dashboard/blogs/types";
+import { Blog } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { axiosInstance } from "@/lib/axios";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function BlogDetailPublicPage() {
   const { blogid } = useParams();
@@ -23,6 +24,7 @@ export default function BlogDetailPublicPage() {
       try {
         setIsLoading(true);
         const res = await axiosInstance.get(`/api/blog/${blogid}`);
+        console.log("Fetched Blog:", res.data.data);
         setBlog(res.data.data);
       } catch (err) {
         console.error("Error fetching blog", err);
@@ -88,6 +90,27 @@ export default function BlogDetailPublicPage() {
 
         <div className="prose dark:prose-invert max-w-none">
           <p className="whitespace-pre-wrap">{blog.blogDescription}</p>
+        </div>
+
+        {/* Author Info */}
+        <div className="flex items-center gap-3 py-2 px-3 rounded-lg mb-3">
+          <Avatar className="h-9 w-9 border border-border">
+            <AvatarImage
+              src={blog.user.profileImage || undefined}
+              alt={blog.user.userName}
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
+
+            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+              {blog.user.userName.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{blog.user.userName}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {blog.user.userEmail || "Email unavailable"}
+            </p>
+          </div>
         </div>
 
         <div className="border-t border-border pt-4 flex flex-col md:flex-row justify-between gap-4 text-sm text-muted-foreground">

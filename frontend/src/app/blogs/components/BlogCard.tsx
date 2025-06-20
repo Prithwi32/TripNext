@@ -9,6 +9,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Calendar, Eye } from "lucide-react";
 import { useState } from "react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { AvatarFallback } from "@radix-ui/react-avatar";
 
 interface BlogCardProps {
   blog: Blog;
@@ -93,6 +95,23 @@ export function BlogCard({ key, blog }: BlogCardProps) {
       </div>
       {/* Actions Footer */}
       <CardFooter className="flex justify-between items-center pt-0 pb-4 px-4">
+        <div className="flex items-center gap-3 py-2 px-3 rounded-lg mb-3">
+          <Avatar className="h-9 w-9 border border-border">
+            <AvatarImage
+              src={blog.user.profileImage}
+              alt={blog.user.userName}
+            />
+            <AvatarFallback className="flex items-center justify-center w-full h-full text-xs bg-primary/10 text-primary">
+              {blog.user.userName?.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{blog.user.userName}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {blog.user.userEmail}
+            </p>
+          </div>
+        </div>
         <Button
           variant="outline"
           size="sm"

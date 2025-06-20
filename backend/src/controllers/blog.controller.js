@@ -260,7 +260,7 @@ const getBlogById = asyncHandler(async (req, res) => {
   const { blogid } = req.params;
 
   try {
-    const blog = await Blog.findById(blogid).populate("user", "userName profileImage");
+    const blog = await Blog.findById(blogid).populate("user", "userEmail userName profileImage").lean();
 
     if (!blog) {
       throw new ApiError(404, "Blog not found");

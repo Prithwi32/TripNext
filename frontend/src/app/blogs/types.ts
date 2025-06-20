@@ -16,18 +16,3 @@ export type Blog = {
   blogComments: string[];
   hashtags: string[];
 };
-
-export type CreateBlogFormData = {
-  blogTitle: string;
-  blogDescription: string;
-  hashtags: string[];
-  blogImages?: FileList;
-};
-
-export type UpdateBlogFormData = {
-  blogTitle: string;
-  blogDescription: string;
-  hashtags: string[];
-  imageUrls: string[];
-  blogImages?: FileList;
-};
