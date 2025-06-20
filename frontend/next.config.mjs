@@ -2,7 +2,7 @@
 const nextConfig = {
     images: {
     domains: [
-      'imgcld.yatra.com',
+      'avatar.iran.liara.run',
       'res.cloudinary.com',
     ],
 },
