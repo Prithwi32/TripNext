@@ -23,7 +23,7 @@ export default function BlogDetailPublicPage() {
       try {
         setIsLoading(true);
         const res = await axiosInstance.get(`/api/blog/${blogid}`);
-        setBlog(res.data.data); // ✅ this is your blog object
+        setBlog(res.data.data);
       } catch (err) {
         console.error("Error fetching blog", err);
         setError("Blog not found or access denied.");
