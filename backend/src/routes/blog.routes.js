@@ -5,6 +5,7 @@ import {
   getAllBlogs,
   getMyBlogs,
   updateBlog,
+  getBlogById
 } from "../controllers/blog.controller.js";
 import { isAuthenticated } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.middlewares.js";
@@ -28,5 +29,6 @@ router.put(
 router.delete("/delete/:id", isAuthenticated, deleteBlog);
 router.get("/my-blogs", isAuthenticated, getMyBlogs);
 router.get("/", getAllBlogs);
+router.get("/:blogid", getBlogById);
 
 export default router;
