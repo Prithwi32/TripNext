@@ -320,7 +320,7 @@ const getUserRecentActivity = asyncHandler(async (req, res) => {
     .find({ user: userId })
     .sort({ createdAt: -1 })
     .limit(3)
-    .select("tripLocation createdAt tripImages")
+    .select("tripLocation tripDescription createdAt tripImages")
     .lean();
 
   // Get recent blogs
@@ -328,22 +328,22 @@ const getUserRecentActivity = asyncHandler(async (req, res) => {
     .find({ user: userId })
     .sort({ createdAt: -1 })
     .limit(3)
-    .select("blogDescription createdAt blogImages hashtags")
+    .select("blogDescription blogTitle createdAt blogImages hashtags")
     .lean();
 
   // Combine and format recent activity
   const recentActivity = [
     ...recentTrips.map(trip => ({
       type: 'trip',
-      title: trip.tripLocation,
-      description: trip.tripLocation,
+      title: trip.tripDescription?.split('\n')[0]?.slice(0, 30) + (trip.tripDescription?.length > 30 ? '...' : '') || 'Trip',
+      description: trip.tripLocation?.slice(0, 50) + (trip.tripLocation?.length > 50 ? '...' : '') || '',
       image: trip.tripImages?.[0] || '',
       createdAt: trip.createdAt,
       id: trip._id
     })), 
     ...recentBlogs.map(blog => ({
       type: 'blog',
-      title: blog.blogDescription?.split('\n')[0]?.slice(0, 30) + (blog.blogDescription?.length > 30 ? '...' : '') || 'Blog post',
+      title: blog.blogTitle?.split('\n')[0]?.slice(0, 30) + (blog.blogTitle?.length > 30 ? '...' : '') || 'Blog post',
       description: blog.blogDescription?.slice(0, 50) + (blog.blogDescription?.length > 50 ? '...' : '') || '',
       image: blog.blogImages?.[0] || '',
       createdAt: blog.createdAt,

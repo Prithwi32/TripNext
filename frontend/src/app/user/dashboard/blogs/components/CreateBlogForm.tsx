@@ -39,6 +39,14 @@ import { motion } from "framer-motion";
 
 // Schema for form validation
 const formSchema = z.object({
+  blogTitle: z
+    .string()
+    .min(5, {
+      message: "Blog title must be at least 5 characters long",
+    })
+    .max(100, {
+      message: "Blog title must not exceed 100 characters",
+    }),
   blogDescription: z.string().min(10, {
     message: "Blog description must be at least 10 characters long",
   }),
@@ -66,10 +74,10 @@ export function CreateBlogForm() {
   const [hashtag, setHashtag] = useState("");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const form = useForm<CreateBlogFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      blogTitle: "",
       blogDescription: "",
       hashtags: [],
     },
@@ -291,8 +299,31 @@ export function CreateBlogForm() {
           </div>
         </CardHeader>
         <CardContent className="p-6 pt-8">
+          {" "}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Blog Title Field - New */}
+              <FormField
+                control={form.control}
+                name="blogTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-lg flex items-center gap-2 mb-2">
+                      <PlusCircle className="h-5 w-5 text-primary" />
+                      Blog Title
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter a captivating title for your travel story"
+                        className="py-6 text-lg"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Image Upload - New Design */}
               <FormField
                 control={form.control}

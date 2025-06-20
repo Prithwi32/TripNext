@@ -94,7 +94,7 @@ export function BlogDetail({ blogId }: BlogDetailProps) {
     if (navigator.share && typeof navigator.share === "function") {
       try {
         await navigator.share({
-          title: "Check out my travel blog!",
+          title: blog?.blogTitle || "Check out my travel blog!",
           text: blog?.blogDescription.substring(0, 100) + "...",
           url: window.location.href,
         });
@@ -221,9 +221,9 @@ export function BlogDetail({ blogId }: BlogDetailProps) {
               <span className="hidden sm:inline">Back to Blogs</span>
               <span className="sm:hidden">Back</span>
             </Link>
-          </Button>
+          </Button>{" "}
           <CardTitle className="text-lg md:text-xl font-bold text-center order-first md:order-none w-full md:w-auto">
-            Blog Details
+            Travel Blog
           </CardTitle>
           <div className="w-[72px]"></div>{" "}
           {/* Empty div for balanced spacing */}
@@ -388,7 +388,8 @@ export function BlogDetail({ blogId }: BlogDetailProps) {
                           : "scale-100 group-hover:scale-105"
                       )}
                       sizes="25vw"
-                    />                    {/* Show count of remaining images */}
+                    />{" "}
+                    {/* Show count of remaining images */}
                     {blog.blogImages.length > 3 && (
                       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center rounded-lg">
                         <span className="text-white text-xl font-semibold">
@@ -402,15 +403,17 @@ export function BlogDetail({ blogId }: BlogDetailProps) {
             </div>
           )}
         </div>
-
         {/* Add extra space to prevent overlap with blog content */}
         <div className="mt-6 mb-8 border-t border-border"></div>
-
         {/* Add extra space to prevent overlap with blog content */}
-        <div className="mt-6 mb-8 border-t border-border"></div>
-
+        <div className="mt-6 mb-8 border-t border-border"></div>{" "}
         {/* Blog Content */}
         <div className="space-y-6">
+          {/* Blog Title */}
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
+            {blog.blogTitle || "Untitled Blog Post"}
+          </h1>
+
           {/* Blog Description with elegant typography */}
           <div className="prose prose-sm md:prose-base lg:prose-lg dark:prose-invert max-w-none">
             <p className="text-base md:text-lg leading-relaxed whitespace-pre-wrap">
@@ -439,9 +442,7 @@ export function BlogDetail({ blogId }: BlogDetailProps) {
               <div className="flex flex-wrap gap-2 items-center">
                 {blog.hashtags.map((tag, index) => {
                   // Generate a consistent but varied color for each hashtag
-                  const colors = [
-                    "outline",
-                  ];
+                  const colors = ["outline"];
                   const colorIndex =
                     Math.abs(
                       tag

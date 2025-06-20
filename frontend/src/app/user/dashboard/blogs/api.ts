@@ -5,7 +5,8 @@ import { Blog, CreateBlogFormData, UpdateBlogFormData } from "./types";
 const prepareFormData = (data: CreateBlogFormData | UpdateBlogFormData) => {
   const formData = new FormData();
 
-  // Add blog description and hashtags
+  // Add blog title, description and hashtags
+  formData.append("blogTitle", data.blogTitle);
   formData.append("blogDescription", data.blogDescription);
   // Add hashtags as individual form entries to create a proper array on the server
   if (data.hashtags && data.hashtags.length > 0) {

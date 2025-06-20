@@ -11,6 +11,11 @@ const blogSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Trip",
     },
+    blogTitle: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     blogDescription: {
       type: String,
       required: true,
