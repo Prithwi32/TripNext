@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { Server } from "socket.io"
+import http from "http";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import setupCloudinary from "./src/utils/cloudinary.js";
@@ -15,6 +17,16 @@ import blogRouter from "./src/routes/blog.routes.js";
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  },
+});
+
+import { registerSocketServer } from "./src/utils/socket.js"
+registerSocketServer(io);
 
 connectDB();
 setupCloudinary();
@@ -50,6 +62,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

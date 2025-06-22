@@ -59,7 +59,7 @@ export default function BlogDetailPublicPage() {
     <Card className="max-w-5xl mx-auto my-8 shadow-md">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <Link href="/">
+          <Link href="/blogs">
             <Button
               variant="ghost"
               size="sm"
