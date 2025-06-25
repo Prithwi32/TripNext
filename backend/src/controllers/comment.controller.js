@@ -12,15 +12,19 @@ const getAllComments = asyncHandler(async (req, res) => {
 
   // Fetch top-level comments
   const comments = await Comment.find({ blogId, commentId: null })
-    .populate("userId", "name")
+    .populate({
+      path: "userId",
+      select: "userName profileImage",
+    })
+    .sort({ createdAt: -1 }) 
     .lean();
 
   // For each top-level comment, fetch its replies
   const commentsWithReplies = await Promise.all(
     comments.map(async (comment) => {
       const replies = await Comment.find({ commentId: comment._id })
-        .populate("userId", "name")
-        .populate("toUserId", "name")
+        .populate("userId", "userName profileImage")
+        .populate("toUserId", "userName profileImage")
         .lean();
       return { ...comment, replies };
     })
@@ -48,9 +52,15 @@ const addComment = asyncHandler(async (req, res) => {
     message,
   });
 
+  // Populate the user data before sending the response
+  const populatedComment = await Comment.findById(newComment._id).populate(
+    "userId",
+    "userName profileImage"
+  );
+
   res.status(201).json({
     success: true,
-    data: newComment,
+    data: populatedComment,
   });
 });
 
@@ -76,10 +86,20 @@ const replyToComment = asyncHandler(async (req, res) => {
     commentId: parentCommentId,
     toUserId: toUserId || parentComment.userId,
   });
+  // Populate both userId and toUserId before sending response
+  const populatedReply = await Comment.findById(reply._id)
+    .populate({
+      path: "userId",
+      select: "userName email profileImage profilePicture",
+    })
+    .populate({
+      path: "toUserId",
+      select: "userName email profileImage profilePicture",
+    });
 
   res.status(201).json({
     success: true,
-    data: reply,
+    data: populatedReply,
   });
 });
 
@@ -105,10 +125,20 @@ const updateComment = asyncHandler(async (req, res) => {
 
   comment.message = message;
   await comment.save();
+  // Populate user fields before sending response
+  const updatedComment = await Comment.findById(commentId)
+    .populate({
+      path: "userId",
+      select: "userName email profileImage profilePicture",
+    })
+    .populate({
+      path: "toUserId",
+      select: "userName email profileImage profilePicture",
+    });
 
   res.status(200).json({
     success: true,
-    data: comment,
+    data: updatedComment,
   });
 });
 
