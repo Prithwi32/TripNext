@@ -117,35 +117,24 @@ export default function BlogDetailPublicPage() {
     );
   }
   return (
-    <Card className="max-w-5xl mx-auto my-8 shadow-md">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <Link href="/blogs">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          </Link>
-          <CardTitle className="text-xl font-bold text-center w-full">
-            {blog.blogTitle || "Blog Details"}
-          </CardTitle>
-          <div className="w-[72px]"></div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {blog.blogImages.length > 0 && (
-          <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden">
-            <Image
-              src={blog.blogImages[0]}
-              alt="Blog Image"
-              fill
-              className="object-cover"
-            />
+    <div className="py-8 px-4">
+      <Card className="max-w-5xl mx-auto shadow-md">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <Link href="/blogs">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+            </Link>
+            <CardTitle className="text-xl font-bold text-center w-full">
+              {blog.blogTitle || "Blog Details"}
+            </CardTitle>
+            <div className="w-[72px]"></div>
           </div>
         </CardHeader>
 
