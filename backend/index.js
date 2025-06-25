@@ -13,6 +13,7 @@ import packageRouter from "./src/routes/package.routes.js";
 import commentRouter from "./src/routes/comment.routes.js";
 import chatRouter from "./src/routes/chat.routes.js";
 import blogRouter from "./src/routes/blog.routes.js";
+import galleryRouter from "./src/routes/gallery.routes.js";
 
 dotenv.config();
 
@@ -51,7 +52,7 @@ app.use("/api/package", packageRouter);
 app.use("/api/comment", commentRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/blog", blogRouter);
-
+app.use("/api/user/gallery", galleryRouter);
 
 // global catch
 app.use((err, req, res, next) => {
