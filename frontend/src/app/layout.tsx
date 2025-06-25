@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/providers";
 import { Outfit } from "next/font/google";
 import LayoutWrapper from "@/components/layout-wrapper";
-import ChatSocketProvider from "@/lib/socket"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -49,7 +48,6 @@ export default function RootLayout({
         >
           {" "}
           <Providers>
-            <ChatSocketProvider />
             <LayoutWrapper>{children}</LayoutWrapper>
           </Providers>
         </ThemeProvider>

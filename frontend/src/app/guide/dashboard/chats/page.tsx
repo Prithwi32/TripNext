@@ -6,17 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { axiosInstance } from "@/lib/axios";
 import { toast } from "react-hot-toast";
-import { socket } from "@/lib/socket";
+import socket from "@/lib/socket";
 import { useMemo } from "react";
 import UserList from "./chat/UserList";
 import { User, Message, GuideChatInterfaceProps } from "./chat/types";
 import ChatPanel from "./chat/ChatPanel";
 import { useSession } from "next-auth/react";
 
-export default function GuideChatInterface({
-  currentUser,
-}: GuideChatInterfaceProps) {
+export default function GuideChatInterface() {
   const { data: session, status } = useSession();
+  const currentUser = session?.user;
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -42,11 +41,30 @@ export default function GuideChatInterface({
     const handleNewMessage = (newMsg: Message) => {
       if (newMsg.conversationId === conversationId) {
         setMessages((prev) => {
-          if (!prev.some((msg) => msg._id === newMsg._id)) {
-            return [...prev, newMsg];
+          const filtered = prev.filter(
+            (msg) =>
+              !(
+                msg._id.startsWith("temp-") &&
+                msg.message === newMsg.message &&
+                msg.sender._id === newMsg.sender._id
+              )
+          );
+          // Only add if not already present
+          if (!filtered.some((msg) => msg._id === newMsg._id)) {
+            return [...filtered, newMsg];
           }
-          return prev;
+          return filtered;
         });
+      }
+    };
+
+    const handleMessageDeleted = (data: {
+      messageId: string;
+      conversationId: string;
+    }) => {
+      const { messageId, conversationId: deletedConvId } = data;
+      if (deletedConvId === conversationId) {
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
       }
     };
 
@@ -54,9 +72,12 @@ export default function GuideChatInterface({
 
     socket.on("newMessage", handleNewMessage);
 
+    socket.on("messageDeleted", handleMessageDeleted);
+
     return () => {
       socket.emit("leaveRoom", conversationId);
       socket.off("newMessage", handleNewMessage);
+      socket.off("messageDeleted", handleMessageDeleted);
     };
   }, [socket, conversationId, open]);
 
@@ -141,7 +162,7 @@ export default function GuideChatInterface({
         _id: currentUserId || "",
         guideEmail: currentUserEmail || "",
         guideName: currentUser?.name || "",
-        profileImage: currentUser?.image || "",
+        profileImage: currentUser?.profileImage || "",
       },
       receiver: {
         _id: selectedUser._id,
@@ -153,7 +174,6 @@ export default function GuideChatInterface({
       conversationId: conversationId,
     };
 
-    // Add optimistic message to UI immediately
     setMessages((prev) => [...prev, optimisticMessage]);
 
     try {
@@ -205,6 +225,15 @@ export default function GuideChatInterface({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (session?.user?.id && session?.user?.token) {
+      socket.auth = { token: session.user.token };
+      socket.io.opts.query = { userId: session.user.id };
+      if (!socket.connected) socket.connect();
+      socket.emit("registerUser", session.user.id);
+    }
+  }, [session]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -227,7 +256,7 @@ export default function GuideChatInterface({
           <ChatPanel
             selectedUser={selectedUser}
             messages={messages}
-            currentUserEmail={currentUserEmail}
+            currentUserEmail={session?.user?.email ?? undefined}
             isSending={isSending}
             onSendMessage={sendMessage}
             onDeleteMessage={deleteMessage}

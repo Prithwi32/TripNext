@@ -82,39 +82,27 @@ const sendMessage = asyncHandler(async (req, res) => {
     ]);
 
     // Emit to the conversation room
-io.to(conversationId).emit("newMessage", {
-  ...populatedMessage.toObject(),
-  conversationId,
-});
+    io.to(conversationId).emit("newMessage", {
+      ...populatedMessage.toObject(),
+      conversationId,
+    });
 
-// Also emit to individual users if needed (optional)
-const receiverSocketId = getRecieverSocketId(receiverId);
-if (receiverSocketId) {
-  io.to(receiverSocketId).emit("newMessage", {
-    ...populatedMessage.toObject(),
-    conversationId,
-  });
-}
+    // Also emit to individual users if needed (optional)
+    const receiverSocketId = getRecieverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", {
+        ...populatedMessage.toObject(),
+        conversationId,
+      });
+    }
 
-const senderSocketId = getRecieverSocketId(sender._id.toString());
-if (senderSocketId) {
-  io.to(senderSocketId).emit("newMessage", {
-    ...populatedMessage.toObject(),
-    conversationId,
-  });
-}
-
-    // const receiverSocketId = getRecieverSocketId(receiverId);
-    // const senderSocketId = getRecieverSocketId(sender._id.toString());
-
-    // if (receiverSocketId) {
-    //   io.to(receiverSocketId).emit("newMessage", populatedMessage);
-    // }
-    // if (senderSocketId) {
-    //   io.to(senderSocketId).emit("newMessage", populatedMessage);
-    // }
-
-    // io.to(conversationId).emit("newMessage", populatedMessage);
+    const senderSocketId = getRecieverSocketId(sender._id.toString());
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("newMessage", {
+        ...populatedMessage.toObject(),
+        conversationId,
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -208,6 +196,9 @@ const deleteMessage = asyncHandler(async (req, res) => {
   }
 
   await Chat.findByIdAndDelete(messageId);
+
+  const conversationId = message.conversationId;
+  io.to(conversationId).emit("messageDeleted", { messageId, conversationId });
 
   res.status(200).json({
     success: true,

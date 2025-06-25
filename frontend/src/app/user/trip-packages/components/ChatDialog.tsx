@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
-import { socket } from "@/lib/socket";
+import socket from "@/lib/socket";
 import { useSession } from "next-auth/react";
 import { useMemo } from "react";
 
@@ -51,29 +51,52 @@ export default function ChatDialog({
     return [currentUserId, receiverId].sort().join("_");
   }, [currentUserId, receiverId]);
 
-useEffect(() => {
-  if (!socket || !conversationId || !open) return;
+  useEffect(() => {
+    if (!socket || !conversationId || !open) return;
 
-  const handleNewMessage = (newMsg: Message) => {
-    if (newMsg.conversationId === conversationId) {
-      setMessages((prev) => {
-        if (!prev.some(msg => msg._id === newMsg._id)) {
-          return [...prev, newMsg];
-        }
-        return prev;
-      });
-    }
-  };
+    const handleNewMessage = (newMsg: Message) => {
+      if (newMsg.conversationId === conversationId) {
+        setMessages((prev) => {
+          const filtered = prev.filter(
+            (msg) =>
+              !(
+                msg._id.startsWith("temp-") &&
+                msg.message === newMsg.message &&
+                msg.sender._id === newMsg.sender._id
+              )
+          );
+          if (!filtered.some((msg) => msg._id === newMsg._id)) {
+            return [...filtered, newMsg];
+          }
+          return filtered;
+        });
+      }
+    };
 
-  socket.emit("joinRoom", conversationId);
+    socket.emit("joinRoom", conversationId);
 
-  socket.on("newMessage", handleNewMessage);
+    socket.on("newMessage", handleNewMessage);
 
-  return () => {
-    socket.emit("leaveRoom", conversationId);
-    socket.off("newMessage", handleNewMessage);
-  };
-}, [socket, conversationId, open]);
+    const handleMessageDeleted = ({
+      messageId,
+      conversationId: deletedConvId,
+    }: {
+      messageId: string;
+      conversationId: string;
+    }) => {
+      if (deletedConvId === conversationId) {
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+      }
+    };
+
+    socket.on("messageDeleted", handleMessageDeleted);
+
+    return () => {
+      socket.emit("leaveRoom", conversationId);
+      socket.off("newMessage", handleNewMessage);
+      socket.off("messageDeleted", handleMessageDeleted);
+    };
+  }, [socket, conversationId, open]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,7 +131,7 @@ useEffect(() => {
 
     // Create optimistic message
     const optimisticMessage: Message = {
-      _id: Date.now().toString(),
+      _id: `temp-${Date.now()}`,
       message: inputValue,
       sender: {
         _id: currentUserId || "",
@@ -116,7 +139,7 @@ useEffect(() => {
           currentUserEmail || "",
         [currentUserEmail?.includes("@guide.com") ? "guideName" : "userName"]:
           session?.user?.name || "",
-        profileImage: session?.user?.image || "",
+        profileImage: session?.user?.profileImage || "",
       },
       createdAt: new Date().toISOString(),
       conversationId,
@@ -157,7 +180,7 @@ useEffect(() => {
 
   const deleteMessage = async (messageId: string) => {
     try {
-      await axiosInstance.delete(`/api/chat/deleteMessage/${messageId}`,{
+      await axiosInstance.delete(`/api/chat/deleteMessage/${messageId}`, {
         data: { senderRole: "User" },
       });
       setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
@@ -165,6 +188,15 @@ useEffect(() => {
       toast.error("Delete failed");
     }
   };
+
+  useEffect(() => {
+    if (session?.user?.id && session?.user?.token) {
+      socket.auth = { token: session.user.token };
+      socket.io.opts.query = { userId: session.user.id };
+      if (!socket.connected) socket.connect();
+      socket.emit("registerUser", session.user.id);
+    }
+  }, [session]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
