@@ -2,7 +2,7 @@ export interface CommentUser {
   _id: string;
   userName: string;
   profileImage?: string;
-  profilePicture?: string; // Include both profilePicture and profileImage for flexibility
+  profilePicture?: string;
 }
 
 export interface Comment {

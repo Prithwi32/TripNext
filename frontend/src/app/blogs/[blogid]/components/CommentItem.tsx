@@ -241,7 +241,7 @@ export function CommentItem({
                     className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground hover:bg-muted/10"
                     onClick={() => {
                       setIsReplying(!isReplying);
-                      setReplyToUserInfo(commentUser); // Default to replying to comment author
+                      setReplyToUserInfo(commentUser); 
                       if (isEditing) {
                         setIsEditing(false);
                         setEditingComment(null);
