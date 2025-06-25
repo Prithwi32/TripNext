@@ -2,7 +2,7 @@ import Link from "next/link";
 import DesktopNavbar from "./deskTopNavbar";
 import MobileNavbar from "./mobileNavbar";
 import { useTheme } from "next-themes";
-import { Plane } from "lucide-react";
+import Image from "next/image";
 
 function Navbar() {
   const { theme } = useTheme();
@@ -13,10 +13,12 @@ function Navbar() {
           <div className="flex items-center">
             <Link href="/">
               <div className="flex items-center gap-2">
-                <Plane
-                  className={`h-6 w-6 ${
-                    theme === "dark" ? "text-white" : "text-black"
-                  }`}
+                <Image
+                  src="/logo.png"
+                  alt="TripNext Logo"
+                  width={34}
+                  height={34}
+                  className="h-10 w-10 object-contain"
                 />
                 <h1 className="text-xl font-bold text-primary travel-underline">
                   Trip
