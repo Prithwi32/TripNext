@@ -51,21 +51,29 @@ export default function ChatDialog({
     return [currentUserId, receiverId].sort().join("_");
   }, [currentUserId, receiverId]);
 
-  useEffect(() => {
-    if (!socket || !conversationId) return;
+useEffect(() => {
+  if (!socket || !conversationId || !open) return;
 
-    const handleNewMessage = (newMsg: Message) => {
-      if (newMsg.conversationId === conversationId) {
-        setMessages((prev) => [...prev, newMsg]);
-      }
-    };
+  const handleNewMessage = (newMsg: Message) => {
+    if (newMsg.conversationId === conversationId) {
+      setMessages((prev) => {
+        if (!prev.some(msg => msg._id === newMsg._id)) {
+          return [...prev, newMsg];
+        }
+        return prev;
+      });
+    }
+  };
 
-    socket.on("newMessage", handleNewMessage);
+  socket.emit("joinRoom", conversationId);
 
-    return () => {
-      socket?.off("newMessage", handleNewMessage);
-    };
-  }, [conversationId]);
+  socket.on("newMessage", handleNewMessage);
+
+  return () => {
+    socket.emit("leaveRoom", conversationId);
+    socket.off("newMessage", handleNewMessage);
+  };
+}, [socket, conversationId, open]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -100,7 +108,7 @@ export default function ChatDialog({
 
     // Create optimistic message
     const optimisticMessage: Message = {
-      _id: Date.now().toString(), // Temporary ID
+      _id: Date.now().toString(),
       message: inputValue,
       sender: {
         _id: currentUserId || "",
@@ -122,7 +130,7 @@ export default function ChatDialog({
       setSending(true);
       const res = await axiosInstance.post(
         `/api/chat/sendMessage/${receiverId}`,
-        { message: inputValue }
+        { message: inputValue, senderRole: "User" }
       );
 
       // Replace optimistic message with actual message from server
@@ -149,7 +157,9 @@ export default function ChatDialog({
 
   const deleteMessage = async (messageId: string) => {
     try {
-      await axiosInstance.delete(`/api/chat/deleteMessage/${messageId}`);
+      await axiosInstance.delete(`/api/chat/deleteMessage/${messageId}`,{
+        data: { senderRole: "User" },
+      });
       setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
     } catch {
       toast.error("Delete failed");

@@ -13,28 +13,32 @@ export const getUserByEmail = async (email) => {
   return user;
 };
 
-// Logic to send a message
 const sendMessage = asyncHandler(async (req, res) => {
   const { receiverId } = req.params;
-  const { message } = req.body;
+  const { message, senderRole } = req.body;
 
   if (!message?.trim()) {
     throw new ApiError(400, "Message cannot be empty");
   }
 
+  if (!["User", "Guide"].includes(senderRole)) {
+    throw new ApiError(400, "Invalid sender role");
+  }
+
+  if (!req.user || !req.user.email) {
+    throw new ApiError(401, "Unauthorized - No user data");
+  }
+
+  const sender =
+    senderRole === "User"
+      ? await User.findOne({ userEmail: req.user.email })
+      : await Guide.findOne({ guideEmail: req.user.email });
+
+  if (!sender) throw new ApiError(404, "Sender account not found");
+
+  const senderModel = senderRole;
+
   try {
-    if (!req.user || !req.user.email) {
-      throw new ApiError(401, "Unauthorized - No user data");
-    }
-
-    const sender =
-      (await User.findOne({ userEmail: req.user.email })) ||
-      (await Guide.findOne({ guideEmail: req.user.email }));
-
-    if (!sender) throw new ApiError(404, "Sender account not found");
-
-    const senderModel = sender.userEmail ? "User" : "Guide";
-
     let receiver, receiverModel;
 
     if (mongoose.Types.ObjectId.isValid(receiverId)) {
@@ -77,19 +81,40 @@ const sendMessage = asyncHandler(async (req, res) => {
       },
     ]);
 
-    // After creating the message
-    const receiverSocketId = getRecieverSocketId(receiverId);
-    const senderSocketId = getRecieverSocketId(sender._id.toString());
+    // Emit to the conversation room
+io.to(conversationId).emit("newMessage", {
+  ...populatedMessage.toObject(),
+  conversationId,
+});
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", populatedMessage);
-    }
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("newMessage", populatedMessage);
-    }
+// Also emit to individual users if needed (optional)
+const receiverSocketId = getRecieverSocketId(receiverId);
+if (receiverSocketId) {
+  io.to(receiverSocketId).emit("newMessage", {
+    ...populatedMessage.toObject(),
+    conversationId,
+  });
+}
 
-    // Also emit to the conversation room
-    io.to(conversationId).emit("newMessage", populatedMessage);
+const senderSocketId = getRecieverSocketId(sender._id.toString());
+if (senderSocketId) {
+  io.to(senderSocketId).emit("newMessage", {
+    ...populatedMessage.toObject(),
+    conversationId,
+  });
+}
+
+    // const receiverSocketId = getRecieverSocketId(receiverId);
+    // const senderSocketId = getRecieverSocketId(sender._id.toString());
+
+    // if (receiverSocketId) {
+    //   io.to(receiverSocketId).emit("newMessage", populatedMessage);
+    // }
+    // if (senderSocketId) {
+    //   io.to(senderSocketId).emit("newMessage", populatedMessage);
+    // }
+
+    // io.to(conversationId).emit("newMessage", populatedMessage);
 
     return res.status(201).json({
       success: true,
@@ -107,7 +132,6 @@ const sendMessage = asyncHandler(async (req, res) => {
   }
 });
 
-// Logic to get all chats of the logged-in user
 const getUserChats = asyncHandler(async (req, res) => {
   const sender = await getUserByEmail(req.user.email);
   if (!sender) throw new ApiError(404, "Sender not found");
@@ -153,12 +177,25 @@ const getUserChats = asyncHandler(async (req, res) => {
   });
 });
 
-// Logic to delete a specific message
 const deleteMessage = asyncHandler(async (req, res) => {
-  const sender = await getUserByEmail(req.user.email);
-  if (!sender) throw new ApiError(400, "Sender not found");
-
   const { messageId } = req.params;
+  const { senderRole } = req.body;
+
+  if (!req.user || !req.user.email) {
+    throw new ApiError(401, "Unauthorized - No user data");
+  }
+
+  if (!["User", "Guide"].includes(senderRole)) {
+    throw new ApiError(400, "Invalid sender role");
+  }
+
+  const sender =
+    senderRole === "User"
+      ? await User.findOne({ userEmail: req.user.email })
+      : await Guide.findOne({ guideEmail: req.user.email });
+
+  if (!sender) throw new ApiError(404, "Sender not found");
+
   if (!mongoose.Types.ObjectId.isValid(messageId)) {
     throw new ApiError(400, "Invalid message ID");
   }
@@ -178,7 +215,6 @@ const deleteMessage = asyncHandler(async (req, res) => {
   });
 });
 
-// Logic to fetch a chat by conversationId
 const getChatById = asyncHandler(async (req, res) => {
   const { conversationId } = req.params;
   const user = await getUserByEmail(req.user.email);
@@ -203,7 +239,6 @@ const getChatById = asyncHandler(async (req, res) => {
   });
 });
 
-// Logic to get all user chatted with the logged-in guide
 const getGuideChats = asyncHandler(async (req, res) => {
   const guide = await Guide.findOne({ guideEmail: req.user.email });
   if (!guide) throw new ApiError(404, "Guide not found");
@@ -213,10 +248,16 @@ const getGuideChats = asyncHandler(async (req, res) => {
   }).sort({ updatedAt: -1 });
 
   const conversationMap = new Map();
+
   chats.forEach((chat) => {
+    if (!chat?.sender || !chat?.receiver) return;
+
     const otherUserId = chat.sender.equals(guide._id)
-      ? chat.receiver.toString()
-      : chat.sender.toString();
+      ? chat.receiver?.toString()
+      : chat.sender?.toString();
+
+    if (!otherUserId) return;
+
     const convId = [guide._id.toString(), otherUserId].sort().join("_");
     if (!conversationMap.has(convId)) {
       conversationMap.set(convId, { userId: otherUserId });
