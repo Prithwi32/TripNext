@@ -403,36 +403,41 @@ export function ProfileSection() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="guideName">Full Name</Label>
-                {isEditing ? (
-                  <div className="space-y-1">
-                    <Input
-                      id="guideName"
-                      value={editData?.guideName || ""}
-                      onChange={(e) =>
-                        setEditData({ ...editData, guideName: e.target.value })
-                      }
-                      required
-                    />
-                    {errors.guideName && (
-                      <p className="text-sm text-red-500">{errors.guideName}</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <span>{profileData.guideName}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{profileData.guideEmail}</span>
+                <div className="space-y-2">
+                  <Label htmlFor="guideName">Full Name</Label>
+                  {isEditing ? (
+                    <div className="space-y-1">
+                      <Input
+                        id="guideName"
+                        value={editData?.guideName || ""}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            guideName: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                      {errors.guideName && (
+                        <p className="text-sm text-red-500">
+                          {errors.guideName}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <span>{profileData.guideName}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{profileData.guideEmail}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -493,7 +498,7 @@ export function ProfileSection() {
                 </div>
               ) : (
                 <div className="p-3 bg-muted rounded-md">
-                  <p>{profileData.description}</p>
+                  <p>{profileData.description || "no bio provided!"}</p>
                 </div>
               )}
             </div>

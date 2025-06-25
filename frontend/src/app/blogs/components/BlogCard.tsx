@@ -94,8 +94,8 @@ export function BlogCard({ key, blog }: BlogCardProps) {
         </div>
       </div>
       {/* Actions Footer */}
-      <CardFooter className="flex justify-between items-center pt-0 pb-4 px-4">
-        <div className="flex items-center gap-3 py-2 px-3 rounded-lg mb-3">
+      <CardFooter className="flex justify-between items-center pt-0 pb-4 px-2">
+        <div className="flex items-center gap-3 py-2 rounded-lg mb-3">
           <Avatar className="h-9 w-9 border border-border">
             <AvatarImage
               src={blog.user.profileImage}
