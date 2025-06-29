@@ -19,8 +19,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 
 function DesktopNavbar() {
+  const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
 
@@ -150,7 +152,10 @@ function DesktopNavbar() {
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                onClick={() => signOut()}
+                onClick={async () => {
+                  await signOut({ redirect: false });
+                  router.push("/");
+                }}
                 className="group flex items-center gap-2 cursor-pointer text-destructive w-full px-2 py-1.5 rounded-sm data-[highlighted]:bg-destructive/90 focus:bg-destructive/10"
               >
                 <LogOut className="h-4 w-4" />

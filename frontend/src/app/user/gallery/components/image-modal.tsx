@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { toast } from "react-hot-toast";
 
 interface ImageModalProps {
   image: GalleryImage;
@@ -40,6 +41,7 @@ export function ImageModal({
   const [animation, setAnimation] = useState<"slideLeft" | "slideRight" | null>(
     null
   );
+  const [copied, setCopied] = useState(false);
 
   // Find current image index
   const currentIndex = images.findIndex((img) => img.id === image.id);
@@ -79,6 +81,21 @@ export function ImageModal({
       onClose();
     }, 200);
   };
+
+const handleCopy = async () => {
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${
+          image.source === "blog"
+            ? `/blogs/${image.sourceId}`
+            : `/user/dashboard/trips/${image.sourceId}`
+        }`
+      : "";
+
+  await navigator.clipboard.writeText(url);
+
+  toast.success("Link copied!")
+};
 
   // Format date nicely
   const formattedDate = new Date(image.createdAt).toLocaleDateString(
@@ -212,6 +229,7 @@ export function ImageModal({
                     />
                   </Button>
                   <Button
+                    onClick={handleCopy}
                     size="icon"
                     variant="ghost"
                     className="h-9 w-9 rounded-full bg-white/10 text-white"
@@ -326,21 +344,32 @@ export function ImageModal({
                         <span className="text-xs">Like</span>
                       </Button>
                       <Button
+                        onClick={handleCopy}
                         variant="outline"
                         size="sm"
                         className="h-auto py-3 flex flex-col items-center justify-center gap-1 bg-background/50 backdrop-blur-sm hover:bg-secondary/90"
                       >
                         <Share2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs">Share</span>
+                        <span className="text-xs">
+                          Share
+                        </span>
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-auto py-3 flex flex-col items-center justify-center gap-1 bg-background/50 backdrop-blur-sm hover:bg-secondary/90"
+                      <Link
+                        href={
+                          image.source === "blog"
+                            ? `/blogs/${image.sourceId}`
+                            : `/user/dashboard/trips/${image.sourceId}`
+                        }
                       >
-                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs">Open</span>
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-auto py-3 flex flex-col items-center justify-center gap-1 bg-background/50 backdrop-blur-sm hover:bg-secondary/90"
+                        >
+                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs">Open</span>
+                        </Button>
+                      </Link>
                     </div>
 
                     {/* Recommended */}
