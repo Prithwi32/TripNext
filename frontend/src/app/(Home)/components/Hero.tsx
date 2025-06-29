@@ -16,8 +16,10 @@ import {
   ArrowRight,
 } from "lucide-react";
 import "../components/travel-animations.css";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -238,7 +240,8 @@ export default function Home() {
 
             {/* Floating card - free recommendations */}
             <motion.div
-              className="absolute -bottom-5 -right-5 md:right-5 bg-card/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-border dark:border-white/10 w-64 z-40"
+              onClick={() => router.push("/user/trip-recommend")}
+              className="cursor-pointer absolute -bottom-5 -right-5 md:right-5 bg-card/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-border dark:border-white/10 w-64 z-40"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.6 }}

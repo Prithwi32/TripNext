@@ -379,10 +379,6 @@ export function ProfileSection() {
                       htmlFor="profileImageUpload"
                       className="cursor-pointer w-full sm:w-auto"
                     >
-                      <div className="flex items-center justify-center gap-2 p-2 border rounded-md hover:bg-muted">
-                        <Upload className="h-4 w-4" />
-                        <span>Upload Image</span>
-                      </div>
                       <Input
                         id="profileImageUpload"
                         type="file"

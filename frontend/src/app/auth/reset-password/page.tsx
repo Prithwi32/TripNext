@@ -1,12 +1,18 @@
 import { ResetPasswordForm } from "./components/ResetForm";
-import { Plane } from "lucide-react";
+import { Home, Plane } from "lucide-react";
 import { AnimatedIllustration } from "@/components/animated-illustration";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Link from "next/link";
 
 export default function ResetPassword() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary/10 to-secondary/10 md:flex-row">
-      <div className="absolute right-4 top-4 z-10">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-4">
+        <Link href="/" aria-label="Home">
+          <div className="p-3 rounded-full hover:bg-primary transition-colors cursor-pointer">
+            <Home className="h-4 w-4 text-foreground" />
+          </div>
+        </Link>
         <ThemeToggle />
       </div>
 

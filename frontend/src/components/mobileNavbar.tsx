@@ -21,8 +21,10 @@ import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
+import { useRouter } from "next/navigation"
 
 function MobileNavbar() {
+  const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { data: session } = useSession();
   const user = session?.user;
@@ -113,7 +115,10 @@ function MobileNavbar() {
                 <Button
                   variant="ghost"
                   className="flex items-center gap-3 justify-start w-full hover:bg-destructive/90 transition-colors duration-200"
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    await signOut({ redirect: false });
+                    router.push("/");
+                  }}
                 >
                   <LogOut className="w-4 h-4" />
                   Logout
