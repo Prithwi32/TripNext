@@ -104,7 +104,7 @@ export default function Home() {
                 size="lg"
                 className="backdrop-blur-sm bg-background/50"
               >
-                <Link href="/guide">Explore Tours</Link>
+                <Link href="/user/trip-packages">Explore Tours</Link>
               </Button>
             </motion.div>
 
