@@ -6,22 +6,23 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
 import { World, type GlobeConfig } from "./Globe"
+import Link from "next/link"
 
 // Destination data with positions - optimized for attachment to globe
 const destinations = [
   {
-    name: "Barcelona, Spain",
+    name: "Western Ghats, Karnataka",
     image: "/img4.jpg",
-    description: "Rich architecture & culture",
+    description: "Monsoon Travel Gateway",
     position: { lat: 41.3851, lng: 2.1734 },
     cardPos: { top: "15%", left: "2%" },
     lgCardPos: { top: "22%", left: "8%" },
     mobileShow: true,
   },
   {
-    name: "Milan, Italy",
+    name: "Jain Temple, Varanga",
     image: "/img2.jpg",
-    description: "Fashion capital of the world",
+    description: "Star-Shaped Architecture",
     position: { lat: 45.4642, lng: 9.19 },
     cardPos: { bottom: "15%", left: "5%" },
     lgCardPos: { bottom: "22%", left: "8%" },
@@ -37,9 +38,9 @@ const destinations = [
     mobileShow: true,
   },
   {
-    name: "St. Petersburg, Russia",
+    name: "Yana Caves, Karnataka",
     image: "/img5.jpg",
-    description: "Imperial architecture",
+    description: "prehistoric karst landscape",
     position: { lat: 59.9343, lng: 30.3351 },
     cardPos: { top: "15%", right: "2%" },
     lgCardPos: { top: "22%", right: "8%" },
@@ -481,13 +482,15 @@ export default function GlobeSection({ globeConfig, data }: WorldProps) {
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.4 }}
       >
+        <Link href="/user/trip-recommend">
         <button
           className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-medium py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 relative z-50"
           style={{ pointerEvents: "auto", zIndex: 50 }}
         >
           Explore All Destinations
         </button>
-      </motion.div>
+        </Link>
+     </motion.div>
     </section>
   )
 }
