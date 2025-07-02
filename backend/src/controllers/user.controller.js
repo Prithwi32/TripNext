@@ -173,7 +173,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
   user.otpExpiry = otpExpiry;
   await user.save();
 
-  await sendOTP(userEmail, otp);
+  await sendOTP(userEmail, otp, "reset");
 
   res.status(200).json({
     message: "OTP sent to your email for password reset",
@@ -307,16 +307,23 @@ const getUserRecentActivity = asyncHandler(async (req, res) => {
   const userId = user._id;
 
   // Get user trips count
-  const tripCount = await mongoose.model("Trip").countDocuments({ user: userId });
+  const tripCount = await mongoose
+    .model("Trip")
+    .countDocuments({ user: userId });
 
   // Get user blogs count
-  const blogCount = await mongoose.model("Blog").countDocuments({ user: userId });
+  const blogCount = await mongoose
+    .model("Blog")
+    .countDocuments({ user: userId });
 
   // Get user comments count
-  const commentCount = await mongoose.model("Comment").countDocuments({ userId: userId });
+  const commentCount = await mongoose
+    .model("Comment")
+    .countDocuments({ userId: userId });
 
   // Get recent trips
-  const recentTrips = await mongoose.model("Trip")
+  const recentTrips = await mongoose
+    .model("Trip")
     .find({ user: userId })
     .sort({ createdAt: -1 })
     .limit(3)
@@ -324,7 +331,8 @@ const getUserRecentActivity = asyncHandler(async (req, res) => {
     .lean();
 
   // Get recent blogs
-  const recentBlogs = await mongoose.model("Blog")
+  const recentBlogs = await mongoose
+    .model("Blog")
     .find({ user: userId })
     .sort({ createdAt: -1 })
     .limit(3)
@@ -333,25 +341,33 @@ const getUserRecentActivity = asyncHandler(async (req, res) => {
 
   // Combine and format recent activity
   const recentActivity = [
-    ...recentTrips.map(trip => ({
-      type: 'trip',
-      title: trip.tripDescription?.split('\n')[0]?.slice(0, 30) + (trip.tripDescription?.length > 30 ? '...' : '') || 'Trip',
-      description: trip.tripLocation?.slice(0, 50) + (trip.tripLocation?.length > 50 ? '...' : '') || '',
-      image: trip.tripImages?.[0] || '',
+    ...recentTrips.map((trip) => ({
+      type: "trip",
+      title:
+        trip.tripDescription?.split("\n")[0]?.slice(0, 30) +
+          (trip.tripDescription?.length > 30 ? "..." : "") || "Trip",
+      description:
+        trip.tripLocation?.slice(0, 50) +
+          (trip.tripLocation?.length > 50 ? "..." : "") || "",
+      image: trip.tripImages?.[0] || "",
       createdAt: trip.createdAt,
-      id: trip._id
-    })), 
-    ...recentBlogs.map(blog => ({
-      type: 'blog',
-      title: blog.blogTitle?.split('\n')[0]?.slice(0, 30) + (blog.blogTitle?.length > 30 ? '...' : '') || 'Blog post',
-      description: blog.blogDescription?.slice(0, 50) + (blog.blogDescription?.length > 50 ? '...' : '') || '',
-      image: blog.blogImages?.[0] || '',
+      id: trip._id,
+    })),
+    ...recentBlogs.map((blog) => ({
+      type: "blog",
+      title:
+        blog.blogTitle?.split("\n")[0]?.slice(0, 30) +
+          (blog.blogTitle?.length > 30 ? "..." : "") || "Blog post",
+      description:
+        blog.blogDescription?.slice(0, 50) +
+          (blog.blogDescription?.length > 50 ? "..." : "") || "",
+      image: blog.blogImages?.[0] || "",
       createdAt: blog.createdAt,
-      id: blog._id
-    }))
+      id: blog._id,
+    })),
   ]
-  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  .slice(0, 5);
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
 
   // Return the data
   res.status(200).json({
@@ -362,8 +378,8 @@ const getUserRecentActivity = asyncHandler(async (req, res) => {
         blogCount,
         commentCount,
       },
-      recentActivity
-    }
+      recentActivity,
+    },
   });
 });
 
@@ -377,5 +393,5 @@ export {
   updateAccountDetails,
   forgetPassword,
   resetPassword,
-  getUserRecentActivity
+  getUserRecentActivity,
 };

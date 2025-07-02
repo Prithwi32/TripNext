@@ -828,7 +828,7 @@ export default function TripRecommendation() {
                               variant="secondary"
                               className="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 shadow-md px-2 py-1.5 backdrop-blur-sm"
                             >
-                              {`Precision: ${(rec.Score * 100)}%`}
+                              {`Precision: ${(rec.Score * 100).toFixed(2)}%`}
                             </Badge>
                           </div>
                         )}

@@ -76,15 +76,19 @@ export function ProfileForm() {
       toast.dismiss();
       toast.success("Your profile has been successfully updated.");
 
-      // Update the session
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          userName: values.userName,
-          profileImage: profileImage,
-        },
-      });
+      try {
+        // Update the session
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: values.userName,
+            profileImage: profileImage,
+          },
+        });
+      } catch (updateError) {
+        console.error("Error updating session:", updateError);
+      }
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast.error(error?.response?.data?.message || "Failed to update profile. Please try again.");

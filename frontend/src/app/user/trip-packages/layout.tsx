@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Toaster } from "react-hot-toast";
+import Loading from "@/app/loading";
 
 export default function DashboardLayout({
   children,
@@ -17,20 +17,15 @@ export default function DashboardLayout({
     if (status === "unauthenticated" || (status === "authenticated" && session?.user.role !== "user")) {
       router.push("/auth/login");
     }
-  }, [status, router]);
 
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading...
-      </div>
-    );
-  }
+    if(status === "authenticated" && session?.user.role === "guide") {
+      router.push("/guide/dashboard");
+    }
+  }, [status, router]);
 
   return (
     <>
-        {children}
-      <Toaster />
+        {status === "loading" ? <Loading /> : children}
     </>
   );
 }

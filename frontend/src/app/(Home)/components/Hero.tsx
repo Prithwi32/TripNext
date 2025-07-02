@@ -93,7 +93,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.4 }}
             >
               <Button asChild size="lg" className="group">
-                <Link href="/auth/signup">
+                <Link href="/auth/login">
                   Get Started
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>

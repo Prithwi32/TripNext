@@ -52,7 +52,7 @@ interface Errors {
 }
 
 export function ProfileSection() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [editData, setEditData] = useState<Partial<EditData> | null>(null);
@@ -314,6 +314,20 @@ export function ProfileSection() {
 
       setIsEditing(false);
       toast.success("Profile Updated!");
+
+      try {
+        // Update the session
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: editData?.guideName || profileData.guideName,
+            profileImage: editData?.profileImage || profileData.profileImage,
+          },
+        });
+      } catch (updateError) {
+        console.error("Error updating session:", updateError);
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update profile");
     }
