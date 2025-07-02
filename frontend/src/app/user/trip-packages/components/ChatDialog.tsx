@@ -202,6 +202,7 @@ export default function ChatDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
+          id="chat-dialog-toggle"
           size="icon"
           className="h-12 w-12 rounded-full bg-blue-950 fixed bottom-4 right-4 shadow-lg z-50"
         >

@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { ArrowRight, Send } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function CallToAction() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const session=useSession();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,14 +59,14 @@ export default function CallToAction() {
                     Join our community of travelers to receive personalized recommendations, exclusive discounts, and travel inspiration.
                   </p>
                   
-                  <div className="hidden md:block">
+                    <div className="hidden md:block">
                     <Button asChild size="lg" className="group">
-                      <Link href="/auth/signup">
-                        Create Free Account
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      <Link href={session.status==="authenticated" ? `${session.data.user.role}/dashboard` : "/auth/login"}>
+                      {session.status=="authenticated" ? "Go to Dashboard" : "Create Free Account"}
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Link>
                     </Button>
-                  </div>
+                    </div>
                 </motion.div>
               </div>
               

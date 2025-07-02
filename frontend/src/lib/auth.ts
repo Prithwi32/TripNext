@@ -80,16 +80,24 @@ export const NEXT_AUTH: NextAuthOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.role = user.role;
         token.name = user.name;
-        token.email = user.email;
         token.profileImage = user.profileImage || null;
         token.token = user.token;
       }
+
+      // Handle update event from session.update()
+      if (trigger === "update" && session) {
+        // Update the token with the new data
+        token.name = session.user.name;
+        token.profileImage = session.user.profileImage;
+      }
+
       return token;
     },
     async session({ session, token }) {

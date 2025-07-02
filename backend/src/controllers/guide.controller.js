@@ -282,7 +282,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
   guide.otpExpiry = otpExpiry;
   await guide.save();
 
-  await sendOTP(guideEmail, otp);
+  await sendOTP(guideEmail, otp, "reset");
 
   res
     .status(200)
