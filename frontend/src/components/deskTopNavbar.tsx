@@ -26,6 +26,15 @@ function DesktopNavbar() {
   const { data: session } = useSession();
   const user = session?.user;
 
+  const handleClick = () => {
+    const hasVerifyEmail = localStorage.getItem("verifyEmail");
+    if (hasVerifyEmail) {
+      router.push("/auth/resend-verify");
+    } else {
+      signIn();
+    }
+  };
+
   // Get user initials for avatar fallback
   const getUserInitials = () => {
     if (!user) return "";
@@ -167,7 +176,7 @@ function DesktopNavbar() {
       ) : (
         <>
           <ThemeToggle />
-          <Button variant="default" onClick={() => signIn()}>
+          <Button variant="default" onClick={handleClick}>
             Sign In
           </Button>
         </>
