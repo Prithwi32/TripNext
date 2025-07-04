@@ -354,22 +354,23 @@ const handleCopy = async () => {
                           Share
                         </span>
                       </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-auto py-3 flex flex-col items-center justify-center gap-1 bg-background/50 backdrop-blur-sm hover:bg-secondary/90"
+                        >
                       <Link
                         href={
                           image.source === "blog"
                             ? `/blogs/${image.sourceId}`
                             : `/user/dashboard/trips/${image.sourceId}`
                         }
+                        className="flex items-center flex-col"
                       >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-auto py-3 flex flex-col items-center justify-center gap-1 bg-background/50 backdrop-blur-sm hover:bg-secondary/90"
-                        >
                           <ExternalLink className="h-4 w-4 text-muted-foreground" />
                           <span className="text-xs">Open</span>
-                        </Button>
                       </Link>
+                        </Button>
                     </div>
 
                     {/* Recommended */}
