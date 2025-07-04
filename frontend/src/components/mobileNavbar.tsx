@@ -21,13 +21,22 @@ import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 
 function MobileNavbar() {
   const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { data: session } = useSession();
   const user = session?.user;
+
+  const handleClick = () => {
+    const hasVerifyEmail = localStorage.getItem("verifyEmail");
+    if (hasVerifyEmail) {
+      router.push("/auth/resend-verify");
+    } else {
+      signIn();
+    }
+  };
 
   return (
     <div className="flex md:hidden items-center space-x-2">
@@ -128,7 +137,7 @@ function MobileNavbar() {
               <Button
                 variant="default"
                 className="w-full"
-                onClick={() => signIn()}
+                onClick={handleClick}
               >
                 Sign In
               </Button>
